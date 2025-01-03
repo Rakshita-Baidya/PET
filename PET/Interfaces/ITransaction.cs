@@ -8,5 +8,7 @@ namespace PET.Interfaces
         Task<List<Transactions>> LoadAllTransactionsAsync();
         Task UpdateTransactionAsync(Transactions transaction);
         Task DeleteTransactionAsync(Transactions transaction);
+
+        Task<Transactions> GetTransactionByIdAsync(Guid transactionId);
     }
 }

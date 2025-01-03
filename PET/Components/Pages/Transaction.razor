@@ -4,10 +4,15 @@
 @using PET.Interfaces
 @using PET.Services
 @using Blazored.Toast.Services
+@using PET.Helper
+
+@inject PreferencesStoreClone Storage
+@inject MapUser MapUser
 
 @inject PageTitleService PageTitleService
 @inject ITransaction TransactionService
 @inject ITag TagService
+@inject IUser UserService
 @inject NavigationManager Navigation
 @inject IToastService ToastService
 
@@ -17,25 +22,82 @@
     <div class="alert alert-danger">@errorMessage</div>
 }
 
+<div class="gap-6 grid grid-cols-1 md:grid-cols-3">
+    @* Total Inflow *@
+    <div class="bg-green-100 p-4 rounded shadow">
+        <div class="align-center flex w-full justify-between">
+            <p class="text-sm">Total Inflow</p>
+            <p class="text-sm">@totalInflowTransactions</p>
+        </div>
+        <p class="text-lg font-semibold">
+            @if (!FilteredTransactions.Any())
+            {
+                @* loggedin user currency *@
+                <span>@userCurrency 0.00</span>
+            }
+            else
+            {
+                <span>@userCurrency @TotalInflow</span>
+            }
+        </p>
+    </div>
+
+    @* Total Outflow *@
+    <div class="bg-red-100 p-4 rounded shadow">
+        <div class="align-center flex w-full justify-between">
+            <p class="text-sm">Total Outflow</p>
+            <p class="text-sm">@totalOutflowTransactions</p>
+        </div>
+        <p class="text-lg font-semibold">
+            @if (!FilteredTransactions.Any())
+            {
+                <span>@userCurrency 0.00</span>
+            }
+            else
+            {
+                <span>@userCurrency @TotalOutflow</span>
+            }
+        </p>
+    </div>
+
+    @* Net Balance *@
+    <div class="bg-blue-100 p-4 rounded shadow">
+        <div class="align-center flex w-full justify-between">
+            <p class="text-sm">Total Transaction</p>
+            <p class="text-sm">@totalTransactions</p>
+        </div>
+        <p class="text-lg font-semibold">
+            @if (!FilteredTransactions.Any())
+            {
+                <span>@userCurrency 0.00</span>
+            }
+            else
+            {
+                <span>@userCurrency @TotalTransaction</span>
+            }
+        </p>
+    </div>
+</div>
 @* Add Transaction Button *@
 <div class="mb-3">
     <button class="btn btn-primary" @onclick="() => OpenModal()">Add Transaction</button>
 </div>
 
 @* Search Input Field *@
-<div class="mb-3">
-    <label for="searchTransactions" class="form-label">Search Transactions:</label>
-    <input id="searchTransactions"
-           type="text"
-           list="transactionList"
-           class="border-gray-300 p-lg-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-           @oninput="OnSearchInputChanged" />
-</div>
+@* <div class="mb-3"> *@
+@*     <label for="searchTransactions" class="form-label">Search Transactions:</label> *@
+@*     <input id="searchTransactions" *@
+@*            type="text" *@
+@*            list="transactionList" *@
+@*            class="border-gray-300 p-lg-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" *@
+@*            @oninput="OnSearchInputChanged" /> *@
+@* </div> *@
+
 
 @* Transactions Table *@
 @if (FilteredTransactions == null || FilteredTransactions.Count == 0)
 {
-    <p>No transactions match the search criteria.</p>
+    <p>No transactions available.</p>
 }
 else
 {
@@ -57,7 +119,7 @@ else
             {
                 <tr>
                     <td>@transaction.Title</td>
-                    <td>@transaction.Amount</td>
+                    <td>@userCurrency @transaction.Amount</td>
                     <td>@transaction.Date.ToShortDateString()</td>
                     <td>@transaction.TransactionType</td>
                     <td>@transaction.PaymentMethod</td>
@@ -108,6 +170,7 @@ else
                             <option value=""> -- Select -- </option>
                             <option value="Debit">Debit</option>
                             <option value="Credit">Credit</option>
+                            <option value="Debt" disabled>Debt</option>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -124,11 +187,11 @@ else
                     <div class="mb-3">
                         <label for="Tags" class="text-gray-700 block text-lg font-medium">Tags:</label>
                         <input id="Tags"
-                               type="text"
-                               @bind="newTransaction.TagName"
-                               list="tagList"
-                               class="border-gray-300 p-lg-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                               @oninput="OnTagInputChanged" />
+                        type="text"
+                        @bind="newTransaction.TagName"
+                        list="tagList"
+                        class="border-gray-300 p-lg-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        @oninput="OnTagInputChanged" />
 
                         @* The datalist element will show available tags as suggestions *@
                         <datalist id="tagList">
@@ -156,17 +219,30 @@ else
 
 
 @code {
+    string userName = string.Empty;
+    string userCurrency = string.Empty;
+    double userBalance = 0.00;
+
+    private double TotalInflow { get; set; }
+    private double TotalOutflow { get; set; }
+    private double TotalTransaction => TotalInflow + TotalOutflow;
+
+    private int totalInflowTransactions = 0;
+    private int totalOutflowTransactions = 0;
+    private int totalTransactions = 0;
 
     private List<Transactions> AllTransactions { get; set; } = new List<Transactions>();
     // initialize new transaction to be added
     private List<Tags> AllTags { get; set; } = new List<Tags>();
     private List<Tags> filteredTags { get; set; } = new List<Tags>();
 
+    private string LoggedInUserName { get; set; }
+    private List<Transactions> FilteredTransactions { get; set; } = new List<Transactions>();
     private Transactions newTransaction = new Transactions();
 
+
     // Filter and search
-    private string searchQuery = string.Empty;
-    private List<Transactions> FilteredTransactions { get; set; } = new List<Transactions>();
+    // private string searchQuery = string.Empty;
 
 
     // initialize value for if a user is editing a transaction
@@ -186,8 +262,41 @@ else
     {
         PageTitleService.PageTitle = "Transaction Overview";
         AllTags = await TagService.LoadAllTagsAsync();
-        await LoadTransactions();
-        FilteredTransactions = AllTransactions;
+        // Get the logged-in user's Name
+        var loggedInUser = await MapUser.GetUserByUsernameAsync(Storage);
+        if (loggedInUser != null)
+        {
+            LoggedInUserName = loggedInUser.Name;
+        }
+
+        userName = loggedInUser.UserName;
+        userBalance = loggedInUser.Balance;
+        userCurrency = loggedInUser.CurrencyCode;
+
+        // Load transactions and filter for the ogged-in user
+
+        AllTransactions = await TransactionService.LoadAllTransactionsAsync();
+
+        FilteredTransactions = AllTransactions.Where(t => t.UserName == loggedInUser.UserName).ToList();
+
+
+        if (FilteredTransactions.Any())
+        {
+            // Calculate total inflow
+            TotalInflow = FilteredTransactions
+                .Where(t => t.TransactionType == "Credit")
+                .Sum(t => t.Amount);
+
+            // Calculate total outflow
+            TotalOutflow = FilteredTransactions
+                .Where(t => t.TransactionType == "Debit")
+                .Sum(t => t.Amount);
+
+            totalInflowTransactions = FilteredTransactions.Where(t => t.TransactionType == "Credit").Count();
+            totalOutflowTransactions = FilteredTransactions.Where(t => t.TransactionType == "Debit").Count();
+            totalTransactions = FilteredTransactions.Count;
+
+        }
     }
 
 
@@ -196,8 +305,16 @@ else
     {
         try
         {
-            AllTransactions = await TransactionService.LoadAllTransactionsAsync();
             errorMessage = null;
+
+            // Fetch the latest transactions and filter for the logged-in user
+            AllTransactions = await TransactionService.LoadAllTransactionsAsync();
+            FilteredTransactions = AllTransactions.Where(t => t.UserName == userName).ToList();
+
+            if (!FilteredTransactions.Any())
+            {
+                errorMessage = "You have no transactions.";
+            }
         }
         catch (Exception ex)
         {
@@ -205,19 +322,21 @@ else
         }
     }
 
-    private async Task OnSearchInputChanged(ChangeEventArgs e)
-    {
-        var typedTitle = e.Value?.ToString();
 
-        if (string.IsNullOrWhiteSpace(typedTitle))
-        {
-            FilteredTransactions = AllTransactions;  // Show all transactions when input is empty
-            return;
-        }
+    // private async Task OnSearchInputChanged(ChangeEventArgs e)
+    // {
+    //     var typedTitle = e.Value?.ToString();
 
-        // Filter existing transactions based on the user's input
-        FilteredTransactions = AllTransactions.Where(t => t.Title.Contains(typedTitle, StringComparison.OrdinalIgnoreCase)).ToList();
-    }
+    //     if (string.IsNullOrWhiteSpace(typedTitle))
+    //     {
+    //         FilteredTransactions = AllTransactions;  
+    // //Show all transactions when input is empty
+    //         return;
+    //     }
+
+    //    // Filter existing transactions based on the user's input
+    //     FilteredTransactions = AllTransactions.Where(t => t.Title.Contains(typedTitle, StringComparison.OrdinalIgnoreCase)).ToList();
+    // }
 
     private void OpenModal(Transactions? transaction = null)
     {
@@ -226,6 +345,8 @@ else
             newTransaction = new Transactions
                 {
                     Id = transaction.Id,
+                    User = transaction.User,
+                    UserName = transaction.UserName,
                     Title = transaction.Title,
                     Amount = transaction.Amount,
                     Date = transaction.Date,
@@ -305,83 +426,115 @@ else
         }
     }
 
-
     private async Task AddOrUpdateTransaction()
+{
+    if (string.IsNullOrWhiteSpace(newTransaction.Title) || newTransaction.Amount <= 0)
     {
-        if (string.IsNullOrWhiteSpace(newTransaction.Title) || newTransaction.Amount <= 0)
+        modalErrorMessage = "Title and Amount must be provided, and Amount must be greater than zero.";
+        return;
+    }
+
+    if (string.IsNullOrWhiteSpace(newTransaction.TransactionType))
+    {
+        modalErrorMessage = "Transaction type must be selected";
+        return;
+    }
+
+    if (string.IsNullOrWhiteSpace(newTransaction.PaymentMethod))
+    {
+        modalErrorMessage = "Payment method must be selected";
+        return;
+    }
+
+    try
+    {
+        // Get the logged-in user
+        var loggedInUser = await MapUser.GetUserByUsernameAsync(Storage);
+
+        // If we are editing an existing transaction
+        if (isEditing)
         {
-            modalErrorMessage = "Title and Amount must be provided, and Amount must be greater than zero.";
-            return;
+            // Find the existing transaction from the database or storage (replace with actual loading logic)
+            var existingTransaction = await TransactionService.GetTransactionByIdAsync(newTransaction.Id);
+
+            // Undo the balance change caused by the previous transaction
+            if (existingTransaction != null)
+            {
+                if (existingTransaction.TransactionType == "Debit")
+                {
+                    loggedInUser.Balance += existingTransaction.Amount;  // Revert debit
+                }
+                else if (existingTransaction.TransactionType == "Credit")
+                {
+                    loggedInUser.Balance -= existingTransaction.Amount;  // Revert credit
+                }
+            }
         }
 
-        if (string.IsNullOrWhiteSpace(newTransaction.TransactionType))
-        {
-            modalErrorMessage = "Transaction type must be selected";
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(newTransaction.PaymentMethod))
-        {
-            modalErrorMessage = "Payment method must be selected";
-            return;
-        }
-
-        // Check for sufficient balance if the transaction is a debit
+        // Update the balance based on the new transaction type
         if (newTransaction.TransactionType == "Debit")
         {
-            var currentBalance = AllTransactions
-                .Where(t => t.TransactionType == "Credit").Sum(t => t.Amount) -
-                AllTransactions.Where(t => t.TransactionType == "Debit").Sum(t => t.Amount);
-
-            if (newTransaction.Amount > currentBalance)
+            if (newTransaction.Amount > loggedInUser.Balance)
             {
                 modalErrorMessage = "Insufficient balance for this debit transaction.";
                 return;
             }
+            loggedInUser.Balance -= newTransaction.Amount;  // Deduct the amount for debit
         }
-
-        try
+        else if (newTransaction.TransactionType == "Credit")
         {
-            var selectedTag = AllTags.FirstOrDefault(t => t.Name == newTransaction.TagName);
-
-            if (selectedTag == null && !string.IsNullOrWhiteSpace(newTransaction.TagName))
-            {
-                // If the tag doesn't exist, create it and save it
-                var newTag = new Tags
-                    {
-                        Id = AllTags.Count > 0 ? AllTags.Max(t => t.Id) + 1 : 1, // Auto-increment ID based on the count
-                        Name = newTransaction.TagName
-                    };
-
-                AllTags.Add(newTag);  // Add to local list
-                await TagService.SaveTagAsync(newTag);  // Save to backend
-
-                selectedTag = newTag;  // Assign the newly created tag
-            }
-
-            if (selectedTag != null)
-            {
-                newTransaction.Tags = selectedTag; // Set the Tag object in the transaction
-            }
-
-            if (isEditing)
-            {
-                await TransactionService.UpdateTransactionAsync(newTransaction);
-            }
-            else
-            {
-                await TransactionService.SaveTransactionAsync(newTransaction);
-            }
-
-            modalErrorMessage = null; // Clear error
-            await LoadTransactions();
-            CloseModal();
+            loggedInUser.Balance += newTransaction.Amount;  // Add the amount for credit
         }
-        catch (Exception ex)
+
+        // Update the logged-in user balance
+        newTransaction.User = loggedInUser;
+        newTransaction.UserName = loggedInUser.UserName;
+
+        // Handle the transaction tags
+        var selectedTag = AllTags.FirstOrDefault(t => t.Name == newTransaction.TagName);
+        if (selectedTag == null && !string.IsNullOrWhiteSpace(newTransaction.TagName))
         {
-            modalErrorMessage = $"Error saving transaction: {ex.Message}";
+            var newTag = new Tags
+            {
+                Id = AllTags.Count > 0 ? AllTags.Max(t => t.Id) + 1 : 1,
+                Name = newTransaction.TagName
+            };
+
+            AllTags.Add(newTag);  
+            await TagService.SaveTagAsync(newTag);  
+
+            selectedTag = newTag;
         }
+
+        if (selectedTag != null)
+        {
+            newTransaction.Tags = selectedTag;
+        }
+
+        // Save the updated transaction
+        if (isEditing)
+        {
+            await TransactionService.UpdateTransactionAsync(newTransaction);  // Update the transaction
+        }
+        else
+        {
+            await TransactionService.SaveTransactionAsync(newTransaction);  // Save a new transaction
+        }
+
+        modalErrorMessage = null; // Clear error
+
+        // Update the user record with the new balance
+        await UserService.UpdateUserAsync(loggedInUser);
+
+        // Load the updated transactions and close the modal
+        await LoadTransactions();
+        CloseModal();
     }
+    catch (Exception ex)
+    {
+        modalErrorMessage = $"Error saving transaction: {ex.Message}";
+    }
+}
 
 
 
@@ -389,6 +542,20 @@ else
     {
         try
         {
+            // Get the logged-in user
+            var loggedInUser = await MapUser.GetUserByUsernameAsync(Storage);
+
+            // Adjust the balance based on the type of the transaction (Credit or Debit)
+            if (transaction.TransactionType == "Credit")
+            {
+                loggedInUser.Balance -= transaction.Amount;  // Deduct the amount for credit
+            }
+            else if (transaction.TransactionType == "Debit")
+            {
+                loggedInUser.Balance += transaction.Amount;  // Add the amount for debit
+            }
+
+            await UserService.UpdateUserAsync(loggedInUser);
             await TransactionService.DeleteTransactionAsync(transaction);
             await LoadTransactions();
         }
@@ -397,6 +564,7 @@ else
             errorMessage = $"Error deleting transaction: {ex.Message}";
         }
     }
+
 
     private void ResetForm()
     {

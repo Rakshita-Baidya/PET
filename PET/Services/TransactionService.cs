@@ -2,6 +2,7 @@
 using PET.Models;
 using System.Text.Json;
 
+
 namespace PET.Services
 {
     public class TransactionService : ITransaction
@@ -59,6 +60,19 @@ namespace PET.Services
             {
                 Console.WriteLine($"Unexpected error while loading transactions: {ex.Message}");
                 return new List<Transactions>();
+            }
+        }
+        public async Task<Transactions> GetTransactionByIdAsync(Guid transactionId)
+        {
+            try
+            {
+                var transactions = await LoadAllTransactionsAsync(); // Load all transactions from the JSON file
+                return transactions.FirstOrDefault(t => t.Id == transactionId); // Return the transaction with the given ID
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching transaction by ID: {ex.Message}");
+                return null;  // Return null if there was an error
             }
         }
 

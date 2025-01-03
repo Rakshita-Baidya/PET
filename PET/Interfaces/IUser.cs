@@ -9,8 +9,8 @@ namespace PET.Interfaces
         string HashPassword(string password);
         bool PasswordValidation(string enteredPassword, string storedPassword);
 
-        ////Task DeleteUserAsync(User user);
-        //Task UpdateUserAsync(User user);
+        ////Task DeleteUserAsync(Users user);
+        Task UpdateUserAsync(Users user);
 
     }
 }

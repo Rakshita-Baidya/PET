@@ -17,7 +17,7 @@ namespace PET.Models
         public String TransactionType { get; set; }
         public DateTime Date { get; set; } = DateTime.Now;
         [Required]
-        public decimal Amount { get; set; }
+        public double Amount { get; set; }
         public String PaymentMethod { get; set; }
         public string TagName { get; set; }
 
