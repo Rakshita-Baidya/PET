@@ -10,38 +10,41 @@
 @inject IToastService ToastService
 @inject NavigationManager Navigation
 
-<h3 class="mb-6 text-gray-900 text-center text-2xl font-bold">Register</h3>
-
+<h3 class="mb-4 text-gray-900 text-center text-4xl font-bold">Register</h3>
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger mx-auto flex w-max">@errorMessage</div>
+}
 <div class="bg-white p-8 mx-auto max-w-lg rounded-lg shadow-xl">
-    <form class="space-y-6" @onsubmit="RegisterUser">
+    <form class="space-y-3" @onsubmit="RegisterUser">
         <div>
             <label class="mb-2 text-gray-700 block text-lg font-medium">Username:</label>
             <input type="text" @bind="newUser.UserName"
-                   class="border-gray-300 p-3 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                   class="border-gray-300 p-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
         </div>
 
         <div>
             <label class="mb-2 text-gray-700 block text-lg font-medium">Full Name:</label>
             <input type="text" @bind="newUser.Name"
-                   class="border-gray-300 p-3 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                   class="border-gray-300 p-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
         </div>
 
         <div>
             <label class="mb-2 text-gray-700 block text-lg font-medium">Email:</label>
             <input type="email" @bind="newUser.Email"
-                   class="border-gray-300 p-3 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                   class="border-gray-300 p-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
         </div>
 
         <div>
             <label class="mb-2 text-gray-700 block text-lg font-medium">Password:</label>
             <input type="password" @bind="newUser.Password"
-                   class="border-gray-300 p-3 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                   class="border-gray-300 p-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
         </div>
 
         @* Currency *@
         <div>
             <label for="Currency" class="mb-2 text-gray-700 block text-lg font-medium">Currency:</label>
-            <InputSelect id="Currency" @bind-Value="newUser.CurrencyCode" class="border-gray-300 p-3 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <InputSelect id="Currency" @bind-Value="newUser.CurrencyCode" class="border-gray-300 p-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 <option value="">-- Select Currency --</option>
                 @foreach (var currency in Currencies)
                 {
@@ -53,13 +56,13 @@
         <div>
             <label class="mb-2 text-gray-700 block text-lg font-medium">Address:</label>
             <input type="text" @bind="newUser.Address"
-                   class="border-gray-300 p-3 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                   class="border-gray-300 p-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
         </div>
 
         <div>
             <label class="mb-2 text-gray-700 block text-lg font-medium">Gender:</label>
             <select @bind="newUser.Gender"
-                    class="border-gray-300 p-3 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    class="border-gray-300 p-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 <option value="">-- Select Gender --</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
@@ -70,12 +73,12 @@
         <div>
             <label class="mb-2 text-gray-700 block text-lg font-medium">Phone:</label>
             <input type="tel" @bind="newUser.Phone"
-                   class="border-gray-300 p-3 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                   class="border-gray-300 p-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
         </div>
         <div>
             <label class="mb-2 text-gray-700 block text-lg font-medium">Balance:</label>
             <input type="number" @bind="newUser.Balance"
-                   class="border-gray-300 p-3 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                   class="border-gray-300 p-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
         </div>
         <button type="submit"
                 class="bg-blue-500 py-3 text-white w-full rounded-lg text-lg font-medium transition-all hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -116,9 +119,15 @@
             ToastService.ShowError(errorMessage);
             return;
         }
-        if (newUser.CurrencyCode == null || newUser.Balance <= 0)
+        if (newUser.CurrencyCode == null)
         {
-            errorMessage = "Currency must be set and Initial balance is cannot be less than zero(0).";
+            errorMessage = "Currency must be set.";
+            ToastService.ShowError(errorMessage);
+            return;
+        }
+        if (newUser.Balance < 0)
+        {
+            errorMessage = "Initial balance is cannot be less than zero(0).";
             ToastService.ShowError(errorMessage);
             return;
         }
