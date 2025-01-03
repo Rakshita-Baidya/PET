@@ -1,0 +1,12 @@
+﻿@page "/profile"
+@using PET.Services
+@inject PageTitleService PageTitleService
+
+<h3>User Profile</h3>
+
+@code {
+    protected override void OnInitialized()
+    {
+        PageTitleService.PageTitle = "User Profile";
+    }
+}

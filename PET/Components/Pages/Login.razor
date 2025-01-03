@@ -1,0 +1,91 @@
+﻿@page "/login"
+
+@using PET.Models
+@using PET.Interfaces
+@using PET.Services
+@using Blazored.Toast.Services
+
+@inject IToastService ToastService
+@inject IUser UserService
+@inject NavigationManager Navigation
+
+<h3 class="mb-6 text-gray-900 text-center text-2xl font-bold">Login</h3>
+
+<div class="bg-white p-8 mx-auto max-w-lg rounded-lg shadow-xl">
+    <form class="space-y-6" @onsubmit="LoginUser">
+        <div>
+            <label class="mb-2 text-gray-700 block text-lg font-medium">Username:</label>
+            <input type="text" @bind="UserName"
+            class="border-gray-300 p-3 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        </div>
+
+        <div>
+            <label class="mb-2 text-gray-700 block text-lg font-medium">Password:</label>
+            <input type="password" @bind="Password"
+            class="border-gray-300 p-3 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        </div>
+
+        <button type="submit"
+        class="bg-blue-500 py-3 text-white w-full rounded-lg text-lg font-medium transition-all hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            Login
+        </button>
+    </form>
+
+    <p class="text-center">Don't have an account? <a href="/register">Register here!</a></p>
+</div>
+
+@code {
+    private string UserName = string.Empty;
+    private string Password = string.Empty;
+    [Inject]
+    private PreferencesStoreClone Storage { get; set; }
+
+    private async Task LoginUser()
+    {
+        if (string.IsNullOrEmpty(UserName) || string.IsNullOrEmpty(Password))
+        {
+            ToastService.ShowError("Username and Password are required.");
+            return;
+        }
+        else
+        {
+
+
+            try
+            {
+                var users = await UserService.LoadAllUsersAsync();
+                var user = users.FirstOrDefault(u => u.UserName == UserName);
+
+                if (user != null)
+                {
+                    // Validate password using bcrypt
+                    // bool isPasswordValid = BCrypt.Net.BCrypt.Verify(UserInput.Password, user.Password);
+
+
+                    if (UserService.PasswordValidation(Password, user.Password))
+                    {
+                        Storage.Set("Username", UserName);
+                        string savedUsername = Preferences.Get("Username", string.Empty);
+                        // Show success message and redirect
+                        ToastService.ShowSuccess("Login successful!");
+                        await Task.Delay(100);
+                        Navigation.NavigateTo("/dashboard"); // Use NavigationManager for redirection
+                    }
+                    else
+                    {
+                        ToastService.ShowError("Invalid username or password.");
+                    }
+                }
+                else
+                {
+                    ToastService.ShowError("Invalid username or password.");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError($"Error during login: {ex.Message}");
+            }
+        }
+    }
+}

@@ -1,0 +1,407 @@
+﻿@page "/transaction"
+
+@using PET.Models
+@using PET.Interfaces
+@using PET.Services
+@using Blazored.Toast.Services
+
+@inject PageTitleService PageTitleService
+@inject ITransaction TransactionService
+@inject ITag TagService
+@inject NavigationManager Navigation
+@inject IToastService ToastService
+
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@* Add Transaction Button *@
+<div class="mb-3">
+    <button class="btn btn-primary" @onclick="() => OpenModal()">Add Transaction</button>
+</div>
+
+@* Search Input Field *@
+<div class="mb-3">
+    <label for="searchTransactions" class="form-label">Search Transactions:</label>
+    <input id="searchTransactions"
+           type="text"
+           list="transactionList"
+           class="border-gray-300 p-lg-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+           @oninput="OnSearchInputChanged" />
+</div>
+
+@* Transactions Table *@
+@if (FilteredTransactions == null || FilteredTransactions.Count == 0)
+{
+    <p>No transactions match the search criteria.</p>
+}
+else
+{
+    <table class="table-striped table-bordered table">
+        <thead class="thead-dark">
+            <tr>
+                <th>Title</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Transaction Type</th>
+                <th>Payment Method</th>
+                <th>Tags</th>
+                <th>Notes</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var transaction in AllTransactions)
+            {
+                <tr>
+                    <td>@transaction.Title</td>
+                    <td>@transaction.Amount</td>
+                    <td>@transaction.Date.ToShortDateString()</td>
+                    <td>@transaction.TransactionType</td>
+                    <td>@transaction.PaymentMethod</td>
+                    <td>@string.Join(", ", transaction.TagName)</td>
+                    <td>@transaction.Notes</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" @onclick="() => OpenModal(transaction)">Edit</button>
+                        <button class="btn btn-danger btn-sm" @onclick="() => DeleteTransaction(transaction)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@* Modal *@
+@if (isModalVisible)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@modalTitle</h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    @if (!string.IsNullOrWhiteSpace(modalErrorMessage))
+                    {
+                        <div class="alert alert-danger">@modalErrorMessage</div>
+                    }
+                    <div class="mb-3">
+                        <label for="transactionTitle" class="form-label">Title:</label>
+                        <input id="transactionTitle" @bind="newTransaction.Title" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="transactionAmount" class="form-label">Amount:</label>
+                        <input id="transactionAmount" @bind="newTransaction.Amount" type="number" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="transactionDate" class="form-label">Date:</label>
+                        <input id="transactionDate" @bind="newTransaction.Date" type="date" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="transactionType" class="form-label">Transaction Type:</label>
+                        <select id="transactionType" @bind="newTransaction.TransactionType" class="form-control">
+                            <option value=""> -- Select -- </option>
+                            <option value="Debit">Debit</option>
+                            <option value="Credit">Credit</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="paymentMethod" class="form-label">Payment Method:</label>
+                        <select id="paymentMethod" @bind="newTransaction.PaymentMethod" class="form-control">
+                            <option value=""> -- Select -- </option>
+                            <option value="Cash">Cash</option>
+                            <option value="Card">Card</option>
+                            <option value="BankTransfer">Bank Transfer</option>
+                            <option value="MobilePayment">Mobile Payment</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="Tags" class="text-gray-700 block text-lg font-medium">Tags:</label>
+                        <input id="Tags"
+                               type="text"
+                               @bind="newTransaction.TagName"
+                               list="tagList"
+                               class="border-gray-300 p-lg-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               @oninput="OnTagInputChanged" />
+
+                        @* The datalist element will show available tags as suggestions *@
+                        <datalist id="tagList">
+                            @foreach (var tag in filteredTags)
+                            {
+                                <option value="@tag.Name" />
+                            }
+                        </datalist>
+                    </div>
+
+
+                    <div class="mb-3">
+                        <label for="transactionNotes" class="form-label">Notes:</label>
+                        <textarea id="transactionNotes" @bind="newTransaction.Notes" class="form-control"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
+                    <button type="button" class="btn btn-success" @onclick="AddOrUpdateTransaction">@modalButtonText</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+
+    private List<Transactions> AllTransactions { get; set; } = new List<Transactions>();
+    // initialize new transaction to be added
+    private List<Tags> AllTags { get; set; } = new List<Tags>();
+    private List<Tags> filteredTags { get; set; } = new List<Tags>();
+
+    private Transactions newTransaction = new Transactions();
+
+    // Filter and search
+    private string searchQuery = string.Empty;
+    private List<Transactions> FilteredTransactions { get; set; } = new List<Transactions>();
+
+
+    // initialize value for if a user is editing a transaction
+    private bool isEditing = false;
+    // Modal values
+    private bool isModalVisible = false;
+    private string modalTitle = "Add New Transaction";
+    private string modalButtonText = "Add Transaction";
+
+    //initialize value for error message
+    private string? errorMessage;
+    private string? modalErrorMessage;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageTitleService.PageTitle = "Transaction Overview";
+        AllTags = await TagService.LoadAllTagsAsync();
+        await LoadTransactions();
+        FilteredTransactions = AllTransactions;
+    }
+
+
+    // for retrieving existing transactions
+    private async Task LoadTransactions()
+    {
+        try
+        {
+            AllTransactions = await TransactionService.LoadAllTransactionsAsync();
+            errorMessage = null;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred while loading transactions: {ex.Message}";
+        }
+    }
+
+    private async Task OnSearchInputChanged(ChangeEventArgs e)
+    {
+        var typedTitle = e.Value?.ToString();
+
+        if (string.IsNullOrWhiteSpace(typedTitle))
+        {
+            FilteredTransactions = AllTransactions;  // Show all transactions when input is empty
+            return;
+        }
+
+        // Filter existing transactions based on the user's input
+        FilteredTransactions = AllTransactions.Where(t => t.Title.Contains(typedTitle, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    private void OpenModal(Transactions? transaction = null)
+    {
+        if (transaction != null)
+        {
+            newTransaction = new Transactions
+                {
+                    Id = transaction.Id,
+                    Title = transaction.Title,
+                    Amount = transaction.Amount,
+                    Date = transaction.Date,
+                    TransactionType = transaction.TransactionType,
+                    PaymentMethod = transaction.PaymentMethod,
+                    Tags = transaction.Tags,
+                    TagName = transaction.TagName,
+                    Notes = transaction.Notes
+                };
+            isEditing = true;
+            modalTitle = "Edit Transaction";
+            modalButtonText = "Save Changes";
+        }
+        else
+        {
+            newTransaction = new Transactions();
+            isEditing = false;
+            modalTitle = "Add New Transaction";
+            modalButtonText = "Add Transaction";
+        }
+
+        isModalVisible = true;
+    }
+
+    private void CloseModal()
+    {
+        isModalVisible = false;
+        ResetForm();
+    }
+
+    private async Task OnTagInputChanged(ChangeEventArgs e)
+    {
+        var typedTag = e.Value?.ToString();
+
+        if (string.IsNullOrWhiteSpace(typedTag))
+        {
+            filteredTags = AllTags;  // Show all tags when input is empty
+            return;
+        }
+
+        // Filter existing tags based on the user's input
+        filteredTags = AllTags.Where(t => t.Name.Contains(typedTag, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    private async Task CheckAndAddTag()
+    {
+        if (string.IsNullOrWhiteSpace(newTransaction.TagName)) return;
+
+        var existingTag = AllTags.FirstOrDefault(t => t.Name.Equals(newTransaction.TagName, StringComparison.OrdinalIgnoreCase));
+
+        if (existingTag == null)
+        {
+            // The tag is not found, so add it as a new tag
+            var newTag = new Tags { Name = newTransaction.TagName };
+            AllTags.Add(newTag);
+
+            await TagService.SaveTagAsync(newTag);
+
+            // Update the Tag object in the transaction model
+            newTransaction.Tags = newTag;
+        }
+        else
+        {
+            // Set the tag to the existing tag
+            newTransaction.Tags = existingTag;
+        }
+    }
+
+    private void SelectTag(string tagName)
+    {
+        // Set the tagName directly from the list of existing tags
+        newTransaction.TagName = tagName;
+        var selectedTag = AllTags.FirstOrDefault(t => t.Name == tagName);
+        if (selectedTag != null)
+        {
+            newTransaction.Tags = selectedTag;
+        }
+    }
+
+
+    private async Task AddOrUpdateTransaction()
+    {
+        if (string.IsNullOrWhiteSpace(newTransaction.Title) || newTransaction.Amount <= 0)
+        {
+            modalErrorMessage = "Title and Amount must be provided, and Amount must be greater than zero.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(newTransaction.TransactionType))
+        {
+            modalErrorMessage = "Transaction type must be selected";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(newTransaction.PaymentMethod))
+        {
+            modalErrorMessage = "Payment method must be selected";
+            return;
+        }
+
+        // Check for sufficient balance if the transaction is a debit
+        if (newTransaction.TransactionType == "Debit")
+        {
+            var currentBalance = AllTransactions
+                .Where(t => t.TransactionType == "Credit").Sum(t => t.Amount) -
+                AllTransactions.Where(t => t.TransactionType == "Debit").Sum(t => t.Amount);
+
+            if (newTransaction.Amount > currentBalance)
+            {
+                modalErrorMessage = "Insufficient balance for this debit transaction.";
+                return;
+            }
+        }
+
+        try
+        {
+            var selectedTag = AllTags.FirstOrDefault(t => t.Name == newTransaction.TagName);
+
+            if (selectedTag == null && !string.IsNullOrWhiteSpace(newTransaction.TagName))
+            {
+                // If the tag doesn't exist, create it and save it
+                var newTag = new Tags
+                    {
+                        Id = AllTags.Count > 0 ? AllTags.Max(t => t.Id) + 1 : 1, // Auto-increment ID based on the count
+                        Name = newTransaction.TagName
+                    };
+
+                AllTags.Add(newTag);  // Add to local list
+                await TagService.SaveTagAsync(newTag);  // Save to backend
+
+                selectedTag = newTag;  // Assign the newly created tag
+            }
+
+            if (selectedTag != null)
+            {
+                newTransaction.Tags = selectedTag; // Set the Tag object in the transaction
+            }
+
+            if (isEditing)
+            {
+                await TransactionService.UpdateTransactionAsync(newTransaction);
+            }
+            else
+            {
+                await TransactionService.SaveTransactionAsync(newTransaction);
+            }
+
+            modalErrorMessage = null; // Clear error
+            await LoadTransactions();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            modalErrorMessage = $"Error saving transaction: {ex.Message}";
+        }
+    }
+
+
+
+    private async Task DeleteTransaction(Transactions transaction)
+    {
+        try
+        {
+            await TransactionService.DeleteTransactionAsync(transaction);
+            await LoadTransactions();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting transaction: {ex.Message}";
+        }
+    }
+
+    private void ResetForm()
+    {
+        newTransaction = new Transactions();
+        isEditing = false;
+        errorMessage = null;
+    }
+}

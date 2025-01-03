@@ -1,0 +1,19 @@
+﻿@inject PageTitleService PageTitleService
+
+
+<div class="bg-blue-600 px-6 py-4 text-white flex items-center justify-between">
+    @* Page Title *@
+    <h1 class="text-xl font-bold">@PageTitleService.PageTitle</h1>
+
+    @* Username *@
+    <div class="text-bold text-sm">Username</div>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        // updates page header
+        PageTitleService.OnPageTitleChanged += StateHasChanged;
+    }
+
+}

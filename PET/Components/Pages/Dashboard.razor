@@ -1,0 +1,163 @@
+﻿@page "/dashboard"
+
+@using PET.Models
+@using PET.Interfaces
+@using PET.Services
+@using PET.Helper
+
+@inject MapUser MapUser
+@inject PreferencesStoreClone Storage
+
+@inject PageTitleService PageTitleService
+@inject ITransaction TransactionService
+
+<h2 class="mb-6 text-2xl font-bold">Available Balance: @currentUser.Balance</h2>
+
+@if (currentUser == null)
+{
+    <p>No user found</p>
+}
+else
+{
+    <p>@currentUser.UserName</p>
+}
+
+<div class="gap-6 grid grid-cols-1 md:grid-cols-3">
+    @* Total Inflow *@
+    <div class="bg-green-100 p-4 rounded shadow">
+        <div class="align-center flex w-full justify-between">
+            <p class="text-sm">Total Inflow</p>
+            <img src="~/favicon.png" />
+        </div>
+        <p class="text-lg font-semibold">@TotalInflow</p>
+    </div>
+
+    @* Total Outflow *@
+    <div class="bg-red-100 p-4 rounded shadow">
+        <div class="align-center flex w-full justify-between">
+            <p class="text-sm">Total Outflow</p>
+            <img src="~/favicon.png" />
+        </div>
+        <p class="text-lg font-semibold">@TotalOutflow</p>
+    </div>
+
+    @* Net Balance *@
+    <div class="bg-blue-100 p-4 rounded shadow">
+        <div class="align-center flex w-full justify-between">
+            <p class="text-sm">Net Balance</p>
+            <img src="~/favicon.png" />
+        </div>
+        <p class="text-lg font-semibold">@NetBalance</p>
+    </div>
+</div>
+
+<div class="my-6 gap-6 grid grid-cols-1 md:grid-cols-3">
+    @* Top 5 Highest Transactions *@
+    <div class="bg-pink-100 p-4 col-span-1 rounded shadow">
+        <div class="align-center flex w-full justify-between">
+            <p class="fw-bold text-md">Top 5 Highest Transactions</p>
+        </div>
+        @if (TopHighestTransactions.Any())
+        {
+            <ul class="mt-2 text-sm">
+                @foreach (var transaction in TopHighestTransactions)
+                {
+                    <li>@transaction.Title: @transaction.Amount</li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="text-sm">No transactions</p>
+        }
+    </div>
+
+    @* Top 5 Lowest Transactions *@
+    <div class="bg-pink-100 p-4 col-span-1 rounded shadow">
+        <div class="align-center flex w-full justify-between">
+            <p class="fw-bold text-md">Top 5 Lowest Transactions</p>
+        </div>
+        @if (TopLowestTransactions.Any())
+        {
+            <ul class="mt-2 text-sm">
+                @foreach (var transaction in TopLowestTransactions)
+                {
+                    <li>@transaction.Title: @transaction.Amount</li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="text-sm">No transactions</p>
+        }
+    </div>
+
+    @* Summary *@
+    <div class="bg-pink-100 p-4 col-span-1 rounded shadow">
+        <div class="align-center flex w-full justify-between">
+            <p class="fw-bold text-md">Summary</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Users? currentUser;
+
+
+    private decimal TotalInflow { get; set; }
+    private decimal TotalOutflow { get; set; }
+    private decimal NetBalance => TotalInflow - TotalOutflow;
+
+    private List<Transactions> AllTransactions { get; set; } = new();
+    private List<Transactions> FilteredTransactions { get; set; } = new();
+    private List<Transactions> TopHighestTransactions { get; set; } = new();
+    private List<Transactions> TopLowestTransactions { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageTitleService.PageTitle = "Transaction Overview";
+        currentUser = await MapUser.GetUserByUsernameAsync(Storage);
+
+        if (currentUser == null)
+        {
+            Console.WriteLine("No user found or email is not set in storage.");
+        }
+        else
+        {
+            Console.WriteLine($"Welcome, {currentUser.Name}!");
+        }
+
+        // Fetch all transactions if currentUser is not null
+        if (currentUser != null)
+        {
+            AllTransactions = await TransactionService.LoadAllTransactionsAsync();
+
+            FilteredTransactions = AllTransactions
+                .Where(t => t.UserName == currentUser.UserName)
+                .ToList();
+
+            // Calculate total inflow
+            TotalInflow = FilteredTransactions
+                .Where(t => t.TransactionType == "Credit")
+                .Sum(t => t.Amount);
+
+            // Calculate total outflow
+            TotalOutflow = FilteredTransactions
+                .Where(t => t.TransactionType == "Debit")
+                .Sum(t => t.Amount);
+
+            // Get top 5 highest transactions
+            TopHighestTransactions = FilteredTransactions
+                .OrderByDescending(t => t.Amount)
+                .Take(5)
+                .ToList();
+
+            // Get top 5 lowest transactions
+            TopLowestTransactions = FilteredTransactions
+                .OrderBy(t => t.Amount)
+                .Take(5)
+                .ToList();
+        }
+    }
+
+}

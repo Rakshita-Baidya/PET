@@ -1,0 +1,33 @@
+﻿@inherits LayoutComponentBase
+@using Blazored.Toast.Services
+@using PET.Models
+@using PET.Interfaces
+@using PET.Services
+@inject IUser UserService
+@inject NavigationManager Navigation
+
+
+<BlazoredToasts />
+
+@if (!IsLoggedIn)
+{
+        <div class="bg-gray-100 flex h-screen">
+            <NavMenu />
+            <div class="flex flex-1 flex-col">
+                <Header />
+                <main class="bg-white p-6 flex-1 overflow-y-auto">
+                @Body
+                </main>
+            </div>
+        </div>
+}
+else
+{
+        <main class="bg-white p-6 flex-1 overflow-y-auto">
+        @Body
+        </main>
+}
+
+@code {
+    bool IsLoggedIn = false;
+}
