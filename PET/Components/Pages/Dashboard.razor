@@ -7,6 +7,7 @@
 
 @inject PageTitleService PageTitleService
 @inject ITransaction TransactionService
+@inject IDebt DebtService
 @inject PreferencesStoreClone Storage
 @inject MapUser MapUser
 @inject NavigationManager Navigation
@@ -17,16 +18,20 @@
 </h2>
 
 
-@* Date Range Filter *@
-@* <div class="col-span-2"> *@
-@*     <label for="dateRangeFilter" class="form-label">Date Range:</label> *@
-@*     <div class="d-flex"> *@
-@*         <input id="startDateFilter" type="date" @bind="startDateFilter" class="form-control" /> *@
-@*         <span class="mx-2">to</span> *@
-@*         <input id="endDateFilter" type="date" @bind="endDateFilter" class="form-control" /> *@
-@*     </div> *@
-@* </div> *@
-
+<div class="mb-6 justify-content-between flex items-center">
+    @* Date Range Filter *@
+    <div class="flex items-center">
+        <label for="dateRangeFilter" class="form-label">Date Range:</label>
+        <div class="d-flex">
+            <input id="startDateFilter" type="date" @bind="startDateFilter" class="form-control" />
+            <span class="mx-2">to</span>
+            <input id="endDateFilter" type="date" @bind="endDateFilter" class="form-control" />
+        </div>
+    </div>
+    <div>
+        <button class="p-2 rounded-md bg-[#00B2B2]" @onclick="() => FilterData()">Filter</button>
+    </div>
+</div>
 
 <div class="gap-6 grid grid-cols-1 md:grid-cols-3">
     @* Total Inflow *@
@@ -69,7 +74,7 @@
     <div class="bg-blue-100 p-4 rounded shadow">
         <div class="align-center flex w-full justify-between">
             <p class="text-sm">Total Transaction</p>
-            <img src="Images/net.svg" alt="net balance"/>
+            <img src="Images/net.svg" alt="net balance" />
         </div>
         <p class="text-lg font-semibold">
             @if (!FilteredTransactions.Any())
@@ -94,13 +99,13 @@
             <p class="text-md font-medium">
                 @if (!FilteredTransactions.Any())
                 {
-                        <span>No Transactions recorded</span>
+                    <span>No Transactions recorded</span>
                 }
                 else
                 {
                     @foreach (var transaction in TopHighestTransactions)
                     {
-                                <li>@transaction.Title: @userCurrency @transaction.Amount</li>
+                    <li>@transaction.Title: @userCurrency @transaction.Amount</li>
                     }
                 }
             </p>
@@ -122,7 +127,7 @@
                 {
                     @foreach (var transaction in TopLowestTransactions)
                     {
-                        <li>@transaction.Title: @userCurrency @transaction.Amount</li>
+                    <li>@transaction.Title: @userCurrency @transaction.Amount</li>
                     }
                 }
             </p>
@@ -133,6 +138,7 @@
     <div class="bg-pink-100 p-4 col-span-1 rounded shadow">
         <div class="align-center flex w-full justify-between">
             <p class="fw-bold text-md">Summary</p>
+
         </div>
     </div>
 </div>
@@ -144,19 +150,46 @@
             <p class="fw-bold text-md">Debt Summary</p>
         </div>
         <ul class="mt-2 text-sm">
-            @* <p class="text-md font-medium"> *@
-            @*     @if (!FilteredTransactions.Any()) *@
-            @*     { *@
-            @*         <span>No Debts recorded</span> *@
-            @*     } *@
-            @*     else *@
-            @*     { *@
-            @*         @foreach (var transaction in TopHighestTransactions) *@
-            @*         { *@
-            @*         <li>@transaction.Title: @userCurrency @transaction.Amount</li> *@
-            @*         } *@
-            @*     } *@
-            @* </p> *@
+
+            <div class="justify-content-between flex">
+                <p class="text-sm">Total Debts Taken</p>
+                <p class="text-md font-medium">
+                    @if (!FilteredDebts.Any())
+                    {
+                        <span>@userCurrency 0.00</span>
+                    }
+                    else
+                    {
+                        <span>@userCurrency @OverallDebts</span>
+                    }
+                </p>
+            </div>
+            <div class="justify-content-between flex">
+                <p class="text-sm">Total Debt Cleared</p>
+                <p class="text-md font-medium">
+                    @if (!FilteredDebts.Any())
+                    {
+                        <span>@userCurrency 0.00</span>
+                    }
+                    else
+                    {
+                        <span>@userCurrency @OverallCleared</span>
+                    }
+                </p>
+            </div>
+            <div class="justify-content-between flex">
+                <p class="text-sm">Total Debt Remaining</p>
+                <p class="text-md font-medium">
+                    @if (!FilteredDebts.Any())
+                    {
+                        <span>@userCurrency 0.00</span>
+                    }
+                    else
+                    {
+                        <span>@userCurrency @OverallRemaining</span>
+                    }
+                </p>
+            </div>
         </ul>
     </div>
 
@@ -166,19 +199,41 @@
             <p class="fw-bold text-md">Pending debts</p>
         </div>
         <ul class="mt-2 text-sm">
-            @* <p class="text-md font-medium"> *@
-            @*     @if (!FilteredTransactions.Any()) *@
-            @*     { *@
-            @*         <span>No Transactions recorded</span> *@
-            @*     } *@
-            @*     else *@
-            @*     { *@
-            @*         @foreach (var transaction in TopLowestTransactions) *@
-            @*         { *@
-            @*         <li>@transaction.Title: @userCurrency @transaction.Amount</li> *@
-            @*         } *@
-            @*     } *@
-            @* </p> *@
+            @if (!FilteredTransactions.Any())
+            {
+                <span>No Debts recorded</span>
+            }
+            else
+            {
+                <table class="min-w-full table-auto">
+                    <thead>
+                        <tr class="border-black px-4 py-2 border-b-2 text-center">
+                            <th>Source</th>
+                            <th>Amount</th>
+                            <th>Taken Date</th>
+                            <th>Interest Rate</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var debt in PendingDebts)
+                        {
+                            <tr class="px-4 py-2 border-b text-center">
+                                <td class="px-4 py-2">@debt.Source</td>
+                                <td class="px-4 py-2">@debt.User.CurrencyCode @debt.Amount</td>
+                                <td class="px-4 py-2">@debt.Taken_Date.ToShortDateString()</td>
+                                <td class="px-4 py-2">@(debt.Interest_Rate == null ? "0" : debt.Interest_Rate)</td>
+                                <td class="px-4 py-2">@debt.Due_Date.ToShortDateString()</td>
+                                <td class="px-4 py-2">@(debt.Is_Cleared ? "Cleared" : "Pending")</td>
+                                <td class="px-4 py-2">@(debt.Notes == null ? "-" : debt.Notes)</td>
+
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
         </ul>
     </div>
 
@@ -188,8 +243,13 @@
 
 
 @code {
+    string userName = string.Empty;
     string userCurrency = string.Empty;
     double userBalance = 0.00;
+
+    private double OverallDebts { get; set; }
+    private double OverallCleared { get; set; }
+    private double OverallRemaining => OverallDebts - OverallCleared;
 
     private double TotalInflow { get; set; }
     private double TotalOutflow { get; set; }
@@ -203,6 +263,10 @@
     private List<Transactions> TopHighestTransactions { get; set; } = new();
     private List<Transactions> TopLowestTransactions { get; set; } = new();
 
+    private List<Debts> AllDebts { get; set; } = new();
+    private List<Debts> FilteredDebts { get; set; } = new();
+    private List<Debts> PendingDebts { get; set; } = new();
+
     protected override async Task OnInitializedAsync()
     {
         PageTitleService.PageTitle = "Transaction Overview";
@@ -213,41 +277,19 @@
             var loggedInUser = await MapUser.GetUserByUsernameAsync(Storage);
             if (loggedInUser != null)
             {
+                userName = loggedInUser.UserName;
                 userCurrency = loggedInUser.CurrencyCode;
                 userBalance = loggedInUser.Balance;
 
                 // Load all transactions
                 AllTransactions = await TransactionService.LoadAllTransactionsAsync();
 
-                // Filter transactions for the logged-in user
-                FilteredTransactions = AllTransactions
-                    .Where(t => t.UserName == loggedInUser.UserName)
-                    .ToList();
+                FilterTransactions();
 
-                if (FilteredTransactions.Any())
-                {
-                    // Calculate total inflow
-                    TotalInflow = FilteredTransactions
-                        .Where(t => t.TransactionType == "Credit")
-                        .Sum(t => t.Amount);
+                AllDebts = await DebtService.LoadAllDebtsAsync();
 
-                    // Calculate total outflow
-                    TotalOutflow = FilteredTransactions
-                        .Where(t => t.TransactionType == "Debit")
-                        .Sum(t => t.Amount);
+                FilterDebts();
 
-                    // Get top 5 highest transactions
-                    TopHighestTransactions = FilteredTransactions
-                        .OrderByDescending(t => t.Amount)
-                        .Take(5)
-                        .ToList();
-
-                    // Get top 5 lowest transactions
-                    TopLowestTransactions = FilteredTransactions
-                        .OrderBy(t => t.Amount)
-                        .Take(5)
-                        .ToList();
-                }
 
             }
             else
@@ -259,5 +301,82 @@
         {
             Console.WriteLine($"Error loading dashboard data: {ex.Message}");
         }
+    }
+    private void FilterData()
+    {
+        FilterTransactions();
+        FilterDebts();
+    }
+
+    private void FilterTransactions()
+    {
+        var filteredTransactions = AllTransactions.Where(t => t.UserName == userName);
+
+        if (startDateFilter.HasValue)
+        {
+            filteredTransactions = filteredTransactions.Where(t => t.Date >= startDateFilter.Value);
+        }
+
+        if (endDateFilter.HasValue)
+        {
+            filteredTransactions = filteredTransactions.Where(t => t.Date <= endDateFilter.Value);
+        }
+
+        FilteredTransactions = filteredTransactions.ToList();
+
+        UpdateTransactionTotals();
+    }
+
+    private void UpdateTransactionTotals()
+    {
+        TotalInflow = FilteredTransactions
+            .Where(t => t.TransactionType == "Credit")
+            .Sum(t => t.Amount);
+
+        TotalOutflow = FilteredTransactions
+            .Where(t => t.TransactionType == "Debit")
+            .Sum(t => t.Amount);
+
+        // Recalculate top transactions after filtering
+        TopHighestTransactions = FilteredTransactions
+            .OrderByDescending(t => t.Amount)
+            .Take(5)
+            .ToList();
+
+        TopLowestTransactions = FilteredTransactions
+            .OrderBy(t => t.Amount)
+            .Take(5)
+            .ToList();
+    }
+
+    private void FilterDebts()
+    {
+        var filteredDebts = AllDebts.Where(d => d.UserName == userName);
+
+        if (startDateFilter.HasValue)
+        {
+            filteredDebts = filteredDebts.Where(d => d.Taken_Date >= startDateFilter.Value);
+        }
+
+        if (endDateFilter.HasValue)
+        {
+            filteredDebts = filteredDebts.Where(d => d.Taken_Date <= endDateFilter.Value);
+        }
+
+        FilteredDebts = filteredDebts.ToList();
+        UpdateDebtTotals();
+    }
+
+    private void UpdateDebtTotals()
+    {
+        OverallDebts = FilteredDebts.Sum(d => d.Amount);
+
+        OverallCleared = FilteredDebts
+            .Where(d => d.Is_Cleared == true)
+            .Sum(d => d.Amount);
+
+        PendingDebts = FilteredDebts
+            .Where(d => !d.Is_Cleared)
+            .ToList();
     }
 }
