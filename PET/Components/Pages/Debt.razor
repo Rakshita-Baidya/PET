@@ -139,7 +139,8 @@ else
                         <td class="px-4 py-2">@(debt.Is_Cleared ? "Cleared" : "Pending")</td>
                         <td class="px-4 py-2">@(debt.Notes == null ? "-" : debt.Notes)</td>
                         <td class="align-center justify-content-center space-x-2 px-4 py-2 flex">
-                            <button @onclick="() => OpenModal(debt)">
+                            <button class="@(debt.Is_Cleared ? "bg-green-500" : "bg-red-500") btn btn-sm" @onclick="() => ClearDebt(debt)" />
+                            <button @onclick="() => OpenModal(debt)" disabled="@(debt.Is_Cleared)">
                                 <img src="Images/edit.svg" alt="edit" class="w-5" />
                             </button>
                             <button @onclick="() => DeleteDebt(debt)"><img src="Images/delete.svg" alt="delete" class="w-5" /></button>
@@ -151,12 +152,44 @@ else
     </div>
 }
 
+@if (isClearConfirmationVisible)
+{
+    <div class="inset-0 bg-gray-900 fixed z-50 flex items-center justify-center bg-opacity-50">
+        <div class="bg-white p-6 w-full max-w-sm rounded-md shadow-lg">
+            <h3 class="text-gray-800 text-xl font-semibold">
+                @(debtToClear.Is_Cleared ? "Revert Debt" : "Clear Debt")
+            </h3>
+            <div class="mt-4">
+                <p class="text-gray-600">
+                    Your debt of <span class="font-bold">@userCurrency @debtToClear.Amount</span>, with an interest rate of
+                    <span class="font-bold">@debtToClear.Interest_Rate %</span>, has accumulated an interest of
+                    <span class="font-bold">@userCurrency @interest</span>, totaling
+                    <span class="font-bold">@userCurrency @clearingAmount</span>.
+                </p>
+                <p class="mt-2 text-gray-500 text-sm">
+                    @(debtToClear.Is_Cleared ? "This will revert the debt clearance." : "This amount will be deducted from your balance.")
+                </p>
+            </div>
+            <div class="mt-4 flex justify-end">
+                <button class="px-4 py-2 bg-red-500 text-white mr-2 rounded-md hover:bg-red-700" @onclick="ConfirmClear">
+                    @(debtToClear.Is_Cleared ? "Revert" : "Clear Debt")
+                </button>
+                <button class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-500" @onclick="CancelClear">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+
+
 @if (isDeleteConfirmationVisible)
 {
     <div class="inset-0 bg-gray-900 fixed z-50 flex items-center justify-center bg-opacity-50">
         <div class="bg-white p-6 w-full max-w-sm rounded-md shadow-lg">
             <h3 class="text-gray-800 text-xl font-semibold">Are you sure you want to delete this debt?</h3>
-            <div class="mt-4">
+            <div class="mt-4 flex-column items-center">
                 <button class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-700" @onclick="ConfirmDelete">
                     Yes, Delete
                 </button>
@@ -203,12 +236,9 @@ else
                     </div>
                     <div class="mb-3">
                         <label for="debtDueDate" class="form-label">Due Date:</label>
-                        <input id="debtDueDate" @bind="newDebt.Due_Date" type="date" class="form-control" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                        <input id="debtDueDate" @bind="newDebt.Due_Date" type="date" class="form-control" />
                     </div>
-                    <div class="mb-3">
-                        <label for="debtIs_Cleared" class="form-label">Is Cleared:</label>
-                        <input id="debtIs_Cleared" @bind="newDebt.Is_Cleared" type="checkbox" />
-                    </div>
+                        @* min="@DateTime.Now.ToString(" yyyy-MM-dd ")"*@
                     <div class="mb-3">
                         <label for="debtNotes" class="form-label">Notes:</label>
                         <textarea id="debtNotes" @bind="newDebt.Notes" class="form-control"></textarea>
@@ -229,6 +259,9 @@ else
     string userName = string.Empty;
     string userCurrency = string.Empty;
     double userBalance = 0.00;
+    double clearingAmount = 0.00;
+    double interest = 0.00;
+    double totalAmount = 0.00;
 
     private double OverallDebts { get; set; }
     private double OverallCleared { get; set; }
@@ -244,6 +277,8 @@ else
     private List<Debts> FilteredDebts { get; set; } = new List<Debts>();
     private Debts newDebt = new Debts();
 
+    private bool isClearConfirmationVisible = false;
+    private Debts debtToClear = null;
     private bool isDeleteConfirmationVisible = false;
     private Debts debtToDelete = null;
 
@@ -369,7 +404,7 @@ else
         isEditing = false;
         errorMessage = null;
     }
-    private bool ValidateTransaction()
+    private bool ValidateDebt()
     {
         if (string.IsNullOrWhiteSpace(newDebt.Source) || newDebt.Amount <= 0)
         {
@@ -382,7 +417,7 @@ else
 
     private async Task AddOrUpdateDebt()
     {
-        if (ValidateTransaction())
+        if (ValidateDebt())
         {
             try
             {
@@ -422,6 +457,103 @@ else
                 modalErrorMessage = $"Error saving debt: {ex.Message}";
             }
         }
+    }
+
+    private double CalculateInterest(Debts debt, DateTime currentDate)
+    {
+        // If the debt is not overdue or is already cleared, no interest
+        if (debt.Due_Date >= currentDate || debt.Is_Cleared)
+            return 0;
+
+        int overdueMonths = ((currentDate.Year - debt.Due_Date.Year) * 12) + currentDate.Month - debt.Due_Date.Month;
+        if (overdueMonths <= 0) return 0; // No interest if not overdue
+
+        decimal interestRate = debt.Interest_Rate / 100;
+        double principal = debt.Amount;
+
+        // compound interest: A = P * (1 + r)^n
+        // A = total amount
+        // P = principal amount
+        // r = interest rate 
+        // n = no of periods
+        double totalAmount = principal * Math.Pow((1 + (double)interestRate), overdueMonths);
+        double interest = totalAmount - principal;
+
+        return Math.Round(interest, 2); // Return the interest only
+    }
+
+
+
+    // for changing Is_Cleared status of existing debts
+    private async Task ConfirmClear()
+    {
+        if (debtToClear != null)
+        {
+            try
+            {
+                var loggedInUser = await MapUser.GetUserByUsernameAsync(Storage);
+
+                if (debtToClear.Is_Cleared)
+                {
+                    debtToClear.Is_Cleared = false;  // Mark as pending
+                    await DebtService.UpdateUserBalanceDebt(loggedInUser, debtToClear);
+                    await DebtService.UpdateDebtAsync(debtToClear);
+                    await UserService.UpdateUserAsync(loggedInUser);
+                    isClearConfirmationVisible = false;
+                    ToastService.ShowSuccess($"Debt status reverted to Pending.");
+                }
+                else
+                {
+                    // Proceed to clear the debt
+                    if (clearingAmount > loggedInUser.Balance)
+                    {
+                        ToastService.ShowError($"Insufficient balance. Clearing amount: {userCurrency}{clearingAmount}");
+                        return;
+                    }
+
+                    debtToClear.Is_Cleared = true;  // Mark as cleared
+                    await DebtService.UpdateUserBalanceDebt(loggedInUser, debtToClear);
+                    await DebtService.UpdateDebtAsync(debtToClear);
+                    await UserService.UpdateUserAsync(loggedInUser);
+                    isClearConfirmationVisible = false;
+                    ToastService.ShowSuccess($"Debt marked as Cleared.");
+                }
+
+                UpdateTotals();
+                await OnInitializedAsync();
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError($"Error updating debt status: {ex.Message}");
+            }
+        }
+    }
+
+
+    private async Task ClearDebt(Debts debt)
+    {
+        debtToClear = debt;
+
+        if (debt.Is_Cleared)
+        {
+            // restore balance and mark as pending
+            interest = -CalculateInterest(debt, DateTime.Now);
+            clearingAmount = debt.Amount + interest;
+            isClearConfirmationVisible = true;
+        }
+        else
+        {
+            // clear the debt
+            interest = CalculateInterest(debt, DateTime.Now);
+            clearingAmount = debt.Amount + interest;
+            isClearConfirmationVisible = true;
+        }
+    }
+
+
+    private void CancelClear()
+    {
+        isClearConfirmationVisible = false;
     }
 
     private void DeleteDebt(Debts debt)

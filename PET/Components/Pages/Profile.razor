@@ -1,12 +1,89 @@
 ﻿@page "/profile"
-@using PET.Services
-@inject PageTitleService PageTitleService
 
-<h3>User Profile</h3>
+@using PET.Models
+@using PET.Interfaces
+@using PET.Services
+@using Blazored.Toast.Services
+@using PET.Helper
+
+@inject PreferencesStoreClone Storage
+@inject MapUser MapUser
+@inject NavigationManager Navigation
+
+@inject PageTitleService PageTitleService
+@inject IUser UserService
+
+<div class="p-6 bg-white mx-auto max-w-4xl rounded-lg shadow-md">
+    <div class="mb-6 text-center">
+        <h2 class="text-gray-800 text-3xl font-semibold">User Profile</h2>
+    </div>
+
+    @if (loggedInUser != null)
+    {
+        <div class="gap-6 grid grid-cols-1 md:grid-cols-2">
+            <!-- User Info -->
+            <div class="space-y-4">
+                <div>
+                    <label class="text-gray-600 font-medium">User Name</label>
+                    <p class="text-gray-800">@loggedInUser?.UserName</p>
+                </div>
+                <div>
+                    <label class="text-gray-600 font-medium">Full Name</label>
+                    <p class="text-gray-800">@loggedInUser?.Name</p>
+                </div>
+                <div>
+                    <label class="text-gray-600 font-medium">Email</label>
+                    <p class="text-gray-800">@loggedInUser?.Email</p>
+                </div>
+                <div>
+                    <label class="text-gray-600 font-medium">Phone</label>
+                    <p class="text-gray-800">@loggedInUser?.Phone</p>
+                </div>
+                <div>
+                    <label class="text-gray-600 font-medium">Gender</label>
+                    <p class="text-gray-800">@loggedInUser?.Gender</p>
+                </div>
+                <div>
+                    <label class="text-gray-600 font-medium">Address</label>
+                    <p class="text-gray-800">@loggedInUser?.Address</p>
+                </div>
+            </div>
+
+            <!-- Currency & Balance -->
+            <div class="space-y-4">
+                <div>
+                    <label class="text-gray-600 font-medium">Currency</label>
+                    <p class="text-gray-800">@loggedInUser?.Currency.Name (@loggedInUser?.CurrencyCode)</p>
+                </div>
+                <div>
+                    <label class="text-gray-600 font-medium">Balance</label>
+                    <p class="text-gray-800">@loggedInUser?.CurrencyCode @loggedInUser?.Balance.ToString("F2")</p>
+                </div>
+                <div>
+                    <label class="text-gray-600 font-medium">Date Joined</label>
+                    <p class="text-gray-800">@loggedInUser?.Date_Created.ToString("MMMM dd, yyyy")</p>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="mt-6 text-center">
+        <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Edit Profile</button>
+    </div>
+</div>
 
 @code {
-    protected override void OnInitialized()
+    private Users loggedInUser = null;
+
+    protected override async Task OnInitializedAsync()
     {
         PageTitleService.PageTitle = "User Profile";
+
+        loggedInUser = await MapUser.GetUserByUsernameAsync(Storage);
+        if (loggedInUser == null)
+        {
+            Navigation.NavigateTo("/login");
+        }
     }
 }
+

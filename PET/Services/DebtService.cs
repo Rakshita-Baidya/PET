@@ -77,7 +77,7 @@ namespace PET.Services
         // Method to update user balance
         public async Task UpdateUserBalanceDebt(Users user, Debts debt)
         {
-            if (debt.Is_Cleared == true)
+            if (debt.Is_Cleared)
             {
                 if (debt.Amount > user.Balance)
                 {
@@ -85,7 +85,7 @@ namespace PET.Services
                 }
                 user.Balance -= debt.Amount;
             }
-            else if (debt.Is_Cleared == false)
+            else
             {
                 user.Balance += debt.Amount;
             }
@@ -94,15 +94,16 @@ namespace PET.Services
         // Method to revert user balance
         public async Task RevertUserBalanceDebt(Users user, Debts debt)
         {
-            if (debt.Is_Cleared == false)
-            {
-                user.Balance += debt.Amount;
-            }
-            else if (debt.Is_Cleared == true)
+            if (!debt.Is_Cleared)
             {
                 user.Balance -= debt.Amount;
             }
+            else
+            {
+                user.Balance += debt.Amount;
+            }
         }
+
 
         // Method to update an existing debt
         public async Task UpdateDebtAsync(Debts updatedDebt)
