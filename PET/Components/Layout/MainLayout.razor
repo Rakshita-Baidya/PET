@@ -5,29 +5,55 @@
 @using PET.Services
 @inject IUser UserService
 @inject NavigationManager Navigation
+@using PET.Helper
 
+@inject PreferencesStoreClone Storage
+@inject MapUser MapUser
 
 <BlazoredToasts />
 
-@if (!IsLoggedIn)
+@if (IsLoggedIn)
 {
-        <div class="bg-gray-100 flex h-screen w-screen">
-            <NavMenu />
-            <div class="flex flex-1 flex-col">
-                <Header />
-                <main class="bg-white p-6 flex-1 overflow-y-auto">
+    <div class="bg-gray-100 flex h-screen w-screen">
+        <NavMenu />
+        <div class="flex flex-1 flex-col">
+            <Header />
+            <main class="bg-white p-6 flex-1 overflow-y-auto">
                 @Body
-                </main>
-            </div>
+            </main>
         </div>
+    </div>
 }
 else
 {
-        <main class="bg-white p-6 flex-1 overflow-y-auto">
+    <main class="h-full min-h-screen items-center justify-center bg-gradient-to-l from-[#e9efef] to-[#006B6B]">
         @Body
-        </main>
+    </main>
 }
 
 @code {
     bool IsLoggedIn = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateLoginStatusAsync();
+
+        Storage.OnChange += async () =>
+        {
+            await UpdateLoginStatusAsync();
+            StateHasChanged();
+        };
+    }
+
+    private async Task UpdateLoginStatusAsync()
+    {
+        var loggedInUser = await MapUser.GetUserByUsernameAsync(Storage);
+
+        IsLoggedIn = loggedInUser != null;
+    }
+
+    public void Dispose()
+    {
+        Storage.OnChange -= async () => await UpdateLoginStatusAsync();
+    }
 }

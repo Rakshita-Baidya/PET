@@ -9,6 +9,8 @@
 @inject ITransaction TransactionService
 @inject PreferencesStoreClone Storage
 @inject MapUser MapUser
+@inject NavigationManager Navigation
+
 
 <h2 class="mb-6 text-2xl font-bold">
     Available Balance: @userCurrency @userBalance
@@ -31,12 +33,11 @@
     <div class="bg-green-100 p-4 rounded shadow">
         <div class="align-center flex w-full justify-between">
             <p class="text-sm">Total Inflow</p>
-            <img src="~/favicon.png" />
+            <img src="Images/stat-up.svg" alt="inflow" />
         </div>
         <p class="text-lg font-semibold">
             @if (!FilteredTransactions.Any())
             {
-                @* loggedin user currency *@
                 <span>@userCurrency 0.00</span>
             }
             else
@@ -50,7 +51,7 @@
     <div class="bg-red-100 p-4 rounded shadow">
         <div class="align-center flex w-full justify-between">
             <p class="text-sm">Total Outflow</p>
-            <img src="~/favicon.png" />
+            <img src="Images/stat-down.svg" alt="outflow" />
         </div>
         <p class="text-lg font-semibold">
             @if (!FilteredTransactions.Any())
@@ -68,7 +69,7 @@
     <div class="bg-blue-100 p-4 rounded shadow">
         <div class="align-center flex w-full justify-between">
             <p class="text-sm">Total Transaction</p>
-            <img src="~/favicon.png" />
+            <img src="Images/net.svg" alt="net balance"/>
         </div>
         <p class="text-lg font-semibold">
             @if (!FilteredTransactions.Any())
@@ -93,13 +94,13 @@
             <p class="text-md font-medium">
                 @if (!FilteredTransactions.Any())
                 {
-                    <span>No Transactions recorded</span>
+                        <span>No Transactions recorded</span>
                 }
                 else
                 {
                     @foreach (var transaction in TopHighestTransactions)
                     {
-                    <li>@transaction.Title: @userCurrency @transaction.Amount</li>
+                                <li>@transaction.Title: @userCurrency @transaction.Amount</li>
                     }
                 }
             </p>
@@ -121,7 +122,7 @@
                 {
                     @foreach (var transaction in TopLowestTransactions)
                     {
-                    <li>@transaction.Title: @userCurrency @transaction.Amount</li>
+                        <li>@transaction.Title: @userCurrency @transaction.Amount</li>
                     }
                 }
             </p>
@@ -210,41 +211,48 @@
         {
             // Get logged-in user
             var loggedInUser = await MapUser.GetUserByUsernameAsync(Storage);
-
-            userCurrency = loggedInUser.CurrencyCode;
-            userBalance = loggedInUser.Balance;
-
-            // Load all transactions
-            AllTransactions = await TransactionService.LoadAllTransactionsAsync();
-
-            // Filter transactions for the logged-in user
-            FilteredTransactions = AllTransactions
-                .Where(t => t.UserName == loggedInUser.UserName)
-                .ToList();
-
-            if (FilteredTransactions.Any())
+            if (loggedInUser != null)
             {
-                // Calculate total inflow
-                TotalInflow = FilteredTransactions
-                    .Where(t => t.TransactionType == "Credit")
-                    .Sum(t => t.Amount);
+                userCurrency = loggedInUser.CurrencyCode;
+                userBalance = loggedInUser.Balance;
 
-                // Calculate total outflow
-                TotalOutflow = FilteredTransactions
-                    .Where(t => t.TransactionType == "Debit")
-                    .Sum(t => t.Amount);
+                // Load all transactions
+                AllTransactions = await TransactionService.LoadAllTransactionsAsync();
 
-                // Get top 5 highest transactions
-                TopHighestTransactions = FilteredTransactions
-                    .OrderByDescending(t => t.Amount)
-                    .Take(5)
+                // Filter transactions for the logged-in user
+                FilteredTransactions = AllTransactions
+                    .Where(t => t.UserName == loggedInUser.UserName)
                     .ToList();
 
-                // Get top 5 lowest transactions
-                TopLowestTransactions = FilteredTransactions
-                    .OrderBy(t => t.Amount)
-                    .Take(5)
-                    .ToList();
+                if (FilteredTransactions.Any())
+                {
+                    // Calculate total inflow
+                    TotalInflow = FilteredTransactions
+                        .Where(t => t.TransactionType == "Credit")
+                        .Sum(t => t.Amount);
+
+                    // Calculate total outflow
+                    TotalOutflow = FilteredTransactions
+                        .Where(t => t.TransactionType == "Debit")
+                        .Sum(t => t.Amount);
+
+                    // Get top 5 highest transactions
+                    TopHighestTransactions = FilteredTransactions
+                        .OrderByDescending(t => t.Amount)
+                        .Take(5)
+                        .ToList();
+
+                    // Get top 5 lowest transactions
+                    TopLowestTransactions = FilteredTransactions
+                        .OrderBy(t => t.Amount)
+                        .Take(5)
+                        .ToList();
+                }
+
+            }
+            else
+            {
+                Navigation.NavigateTo("/login");
             }
         }
         catch (Exception ex)

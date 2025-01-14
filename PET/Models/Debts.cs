@@ -6,15 +6,18 @@ namespace PET.Models
     {
         [Key]
         public Guid Id { get; set; } = Guid.NewGuid();
-        public Users User_Id { get; set; }
+        [Required]
+        public string UserName { get; set; }
+
+        public Users User { get; set; }
         public string Source { get; set; }
         [Required]
-        public decimal Amount { get; set; }
-        public DateTime Taken_Date { get; set; }
+        public double Amount { get; set; }
+        public DateTime Taken_Date { get; set; } = DateTime.Now;
         public decimal Interest_Rate { get; set; }
-        public DateTime Due_Date { get; set; }
+        public DateTime Due_Date { get; set; } = DateTime.Now;
         public string Notes { get; set; }
-        public string Status { get; set; }
+        public bool Is_Cleared { get; set; }
         public DateTime Date_Created { get; set; } = DateTime.Now;
     }
 }

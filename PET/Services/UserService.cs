@@ -12,18 +12,6 @@ namespace PET.Services
         // Path to users.json file
         private readonly string usersFilePath = Path.Combine(AppContext.BaseDirectory, "Details", "Users.json");
 
-        //private string HashPassword(string password)
-        //{
-        //    // Generate bcrypt hash using the password
-        //    return BCrypt.Net.BCrypt.HashPassword(password);
-        //}
-
-        //public bool PasswordValidation(string enteredPassword, string storedPassword)
-        //{
-        //    // Compare the provided password with the stored bcrypt hash
-        //    return BCrypt.Net.BCrypt.Verify(enteredPassword, storedPassword);
-        //}
-
         public string HashPassword(string password)
         {
             using (var sha256 = SHA256.Create())
@@ -48,8 +36,8 @@ namespace PET.Services
 
         }
 
-        // Method to save a new user
-        public async Task SaveUserAsync(Users user)
+        // Method to add a new user
+        public async Task AddUserAsync(Users user)
         {
             try
             {
@@ -71,7 +59,6 @@ namespace PET.Services
             {
                 // Serialize the user list to JSON
                 var json = JsonSerializer.Serialize(users, new JsonSerializerOptions { WriteIndented = true });
-                // Write the JSON string to the file
                 await File.WriteAllTextAsync(usersFilePath, json);
             }
             catch (Exception ex)
@@ -120,23 +107,6 @@ namespace PET.Services
                 throw;
             }
         }
-
-
-        //// Method to delete a user
-        //public async Task DeleteUserAsync(User userToDelete)
-        //{
-        //    try
-        //    {
-        //        var users = await LoadAllUsersAsync();
-        //        users.RemoveAll(u => u.Id == userToDelete.Id);
-        //        await SaveUsersAsync(users);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"Error deleting user: {ex.Message}");
-        //        throw;
-        //    }
-        //}
 
     }
 }

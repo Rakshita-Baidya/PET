@@ -10,8 +10,8 @@ namespace PET.Services
         // path to transaction json file
         private readonly string transactionsFilePath = Path.Combine(AppContext.BaseDirectory, "Details", "Transactions.json");
 
-        // Method to save a new transaction
-        public async Task SaveTransactionAsync(Transactions transaction)
+        // Method to add a new transaction
+        public async Task AddTransactionAsync(Transactions transaction)
         {
             try
             {
@@ -21,12 +21,10 @@ namespace PET.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error saving transaction: {ex.Message}");
+                Console.WriteLine($"Error adding transaction: {ex.Message}");
                 throw;
             }
-
         }
-
         // Method to save the entire transaction list to the json file
         private async Task SaveAllTransactionAsync(List<Transactions> transactions)
         {
@@ -34,7 +32,6 @@ namespace PET.Services
             {
                 // Convert the transaction list to a JSON string with indentation
                 var json = JsonSerializer.Serialize(transactions, new JsonSerializerOptions { WriteIndented = true });
-                // Write the JSON string to the file
                 await File.WriteAllTextAsync(transactionsFilePath, json);
             }
             catch (Exception ex)
@@ -62,17 +59,48 @@ namespace PET.Services
                 return new List<Transactions>();
             }
         }
+
         public async Task<Transactions> GetTransactionByIdAsync(Guid transactionId)
         {
             try
             {
-                var transactions = await LoadAllTransactionsAsync(); // Load all transactions from the JSON file
-                return transactions.FirstOrDefault(t => t.Id == transactionId); // Return the transaction with the given ID
+                var transactions = await LoadAllTransactionsAsync();
+                return transactions.FirstOrDefault(t => t.Id == transactionId);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error fetching transaction by ID: {ex.Message}");
-                return null;  // Return null if there was an error
+                return null;
+            }
+        }
+
+        // Method to update user balance
+        public async Task UpdateUserBalanceTransaction(Users user, Transactions transaction)
+        {
+            if (transaction.TransactionType == "Debit")
+            {
+                if (transaction.Amount > user.Balance)
+                {
+                    throw new Exception("Insufficient balance for this debit transaction.");
+                }
+                user.Balance -= transaction.Amount;
+            }
+            else if (transaction.TransactionType == "Credit")
+            {
+                user.Balance += transaction.Amount;
+            }
+        }
+
+        // Method to revert user balance
+        public async Task RevertUserBalanceTransaction(Users user, Transactions transaction)
+        {
+            if (transaction.TransactionType == "Debit")
+            {
+                user.Balance += transaction.Amount;
+            }
+            else if (transaction.TransactionType == "Credit")
+            {
+                user.Balance -= transaction.Amount;
             }
         }
 
@@ -88,7 +116,6 @@ namespace PET.Services
                 if (transactionIndex != -1)
                 {
                     transactions[transactionIndex] = updatedTransaction;
-                    // Save the updated transaction list
                     await SaveAllTransactionAsync(transactions);
                 }
             }
@@ -105,7 +132,6 @@ namespace PET.Services
             try
             {
                 var transactions = await LoadAllTransactionsAsync();
-                // Remove the transaction by matching the Id
                 transactions.RemoveAll(t => t.Id == transactionToDelete.Id);
                 await SaveAllTransactionAsync(transactions);
             }

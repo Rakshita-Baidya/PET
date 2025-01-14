@@ -1,19 +1,46 @@
-﻿@inject PageTitleService PageTitleService
+﻿@using PET.Models
+@using PET.Services
+@using PET.Helper
 
+@inject PageTitleService PageTitleService
+@inject PreferencesStoreClone Storage
+@inject MapUser MapUser
 
-<div class="bg-blue-600 px-6 py-4 text-white flex items-center justify-between">
-    @* Page Title *@
+<div class="bg-white px-6 py-3 flex items-center justify-between border-b-2 border-[#006B6B]">
     <h1 class="text-xl font-bold">@PageTitleService.PageTitle</h1>
 
-    @* Username *@
-    <div class="text-bold text-sm">Username</div>
+    <div class="text-md font-bold">Welcome, @userName</div>
 </div>
 
 @code {
-    protected override void OnInitialized()
+    string userName = string.Empty;
+
+    protected override async Task OnInitializedAsync()
     {
-        // updates page header
+        // Load user on initialization
+        await LoadUserAsync();
+
+        // Subscribe to storage changes
+        Storage.OnChange += async () =>
+        {
+            await LoadUserAsync();
+            StateHasChanged();
+        };
+
+        // Update page title changes
         PageTitleService.OnPageTitleChanged += StateHasChanged;
     }
 
+    private async Task LoadUserAsync()
+    {
+        var loggedInUser = await MapUser.GetUserByUsernameAsync(Storage);
+        userName = loggedInUser?.UserName ?? "Guest";
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe from events
+        Storage.OnChange -= async () => await LoadUserAsync();
+        PageTitleService.OnPageTitleChanged -= StateHasChanged;
+    }
 }

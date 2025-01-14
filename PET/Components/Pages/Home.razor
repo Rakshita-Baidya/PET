@@ -1,21 +1,22 @@
 ﻿@page "/"
 
-<h3>Home</h3>
+<div class="text-black min-h-screen bg-gradient-to-b from-[#e9efef] to-[#006B6B]" >
 
-<div class="bg-blue-600 px-6 py-4 text-white flex items-center justify-between">
-    @* App Name *@
-    <h1 class="text-xl font-bold">P.E.T.</h1>
+<div class="px-6 py-3 flex items-center justify-between border-2 border-b-[#006B6B] bg-[#ffffff]">
+        @* App Name *@
+    <h1 class="text-2xl font-bold">P.E.T.</h1>
 
-    @* Username *@
-    <div class="text-bold text-sm">
+        @* Username *@
+    <div class="text-bold text-md space-x-2">
 
             <a href="/">Home</a>
-        @* <li><a href="/features">Features</a></li> *@
-        @* <li><a href="/contact">Contact Us</a></li> *@
+            @* <li><a href="/features">Features</a></li> *@
+            @* <li><a href="/contact">Contact Us</a></li> *@
             <a href="/register">Register</a>
             <a href="/login">Login</a>
 
     </div>
+</div>
 </div>
 
 @code {

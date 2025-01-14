@@ -3,36 +3,53 @@
 @using PET.Services
 @using Blazored.Toast.Services
 
+@using PET.Helper
+
+@inject PreferencesStoreClone Storage
 @inject IToastService ToastService
 @inject IUser UserService
 @inject NavigationManager Navigation
 
-<div class="w-64 bg-blue-400 text-white flex h-screen flex-col">
+<div class="top-0 left-0 w-52 text-white flex h-screen flex-col bg-[#006B6B] font-bold">
     @* Logo and App Name *@
-    <div class="border-blue-500 p-6 border-b text-center">
-        <div class="text-2xl font-bold">P.E.T.</div>
+    <div class="my-4 border-b border-[#006B6B] text-center">
+        <img src="Images/logo.png" alt="logo" class="h-20 mx-auto" />
+        <div class="text-xl font-bold">P.E.T.</div>
         <p class="text-sm">Purrfect Expense Tracker</p>
     </div>
 
     @* Navigation Links *@
-    <nav class="p-4 flex-1">
-        <NavLink href="/" class="px-4 py-2 block rounded hover:bg-blue-500" activeClass="bg-blue-700">Home</NavLink>
-        <NavLink href="/register" class="px-4 py-2 block rounded hover:bg-blue-500" activeClass="bg-blue-700">Registration</NavLink>
-        <NavLink href="/login" class="px-4 py-2 block rounded hover:bg-blue-500" activeClass="bg-blue-700">Login</NavLink>
-        <NavLink href="/dashboard" class="px-4 py-2 block rounded hover:bg-blue-500" activeClass="bg-blue-700">Dashboard</NavLink>
-        <NavLink href="/transaction" class="px-4 py-2 block rounded hover:bg-blue-500" activeClass="bg-blue-700">Transaction</NavLink>
-        <NavLink href="/profile" class="px-4 py-2 block rounded hover:bg-blue-500" activeClass="bg-blue-700">User Profile</NavLink>
+    <nav class="p-4 text-white space-y-2 flex-1">
+        <NavLink href="/dashboard" class="p-2 space-x-2 flex items-center rounded hover:bg-[#3A8C8C] hover:text-white" activeClass="text-white bg-[#3A8C8C] shadow-md">
+            <img src="Images/dashboard.svg" alt="dashboard" class="h-5" >
+            <span>Dashboard</span>
+        </NavLink>
+        <NavLink href="/transaction" class="p-2 space-x-2 flex items-center rounded hover:bg-[#3A8C8C] hover:text-white" activeClass="text-white bg-[#3A8C8C] shadow-md">
+            <img src="Images/wallet.svg" alt="transaction" class="h-5" />
+            <span>Transaction</span>
+        </NavLink>
+        <NavLink href="/debt" class="p-2 space-x-2 flex items-center rounded hover:bg-[#3A8C8C] hover:text-white" activeClass="text-white bg-[#3A8C8C] shadow-md">
+            <img src="Images/debt.svg" alt="debt" class="h-5" />
+            <span>Debt</span>
+        </NavLink>
+        <NavLink href="/profile" class="p-2 space-x-2 flex items-center rounded hover:bg-[#3A8C8C] hover:text-white" activeClass="text-white bg-[#3A8C8C] shadow-md">
+            <img src="Images/user.svg" alt="user" class="h-5" />
+            <span>Profile</span>
+        </NavLink>
     </nav>
 
     @* Sign Out *@
-    <button @onclick="Logout" class="m-4 bg-blue-500 px-4 py-2 rounded hover:bg-red-500">
-        Sign Out
-    </button>
+    <div class="p-4 mt-auto">
+        <button @onclick="Logout" class="bg-red-500 p-2 mx-auto flex w-full justify-center rounded-sm shadow-md">
+            Sign Out
+        </button>
+    </div>
 </div>
 
 @code {
     private async Task Logout()
     {
+        Storage.ClearAll();
         ToastService.ShowSuccess("Logged out successfully!");
         await Task.Delay(500);
         Navigation.NavigateTo("/login");

@@ -4,11 +4,12 @@ namespace PET.Interfaces
 {
     public interface ITransaction
     {
-        Task SaveTransactionAsync(Transactions transaction);
+        Task AddTransactionAsync(Transactions transaction);
         Task<List<Transactions>> LoadAllTransactionsAsync();
         Task UpdateTransactionAsync(Transactions transaction);
         Task DeleteTransactionAsync(Transactions transaction);
-
+        Task UpdateUserBalanceTransaction(Users user, Transactions transaction);
+        Task RevertUserBalanceTransaction(Users user, Transactions transaction);
         Task<Transactions> GetTransactionByIdAsync(Guid transactionId);
     }
 }

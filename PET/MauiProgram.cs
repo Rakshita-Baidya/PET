@@ -31,7 +31,7 @@ namespace PET
             builder.Services.AddTransient<ICurrency, CurrenyService>();
             builder.Services.AddTransient<ITag, TagService>();
             builder.Services.AddTransient<ITransaction, TransactionService>();
-            builder.Services.AddTransient<DebtService>();
+            builder.Services.AddTransient<IDebt, DebtService>();
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
             builder.Logging.AddDebug();

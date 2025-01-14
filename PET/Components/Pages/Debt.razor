@@ -1,0 +1,462 @@
+﻿@page "/debt"
+
+@using PET.Models
+@using PET.Interfaces
+@using PET.Services
+@using Blazored.Toast.Services
+@using PET.Helper
+
+@inject PreferencesStoreClone Storage
+@inject MapUser MapUser
+
+@inject PageTitleService PageTitleService
+@inject IDebt DebtService
+@inject IUser UserService
+@inject NavigationManager Navigation
+@inject IToastService ToastService
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<div class="justify-content-between flex">
+    <h2 class="mb-6 text-2xl font-bold">
+        Available Balance: @userCurrency @userBalance
+    </h2>
+    @* Add Debt Button *@
+    <div class="mb-3">
+        <button class="btn btn-primary" @onclick="() => OpenModal()">Add Debt</button>
+    </div>
+</div>
+
+@* Filter Controls *@
+<div class="mb-6 justify-content-between flex items-center">
+    @* Date Range Filter *@
+    <div class="flex items-center">
+        <input id="startDateFilter" type="date" @bind="startDateFilter" class="form-control" />
+        <span class="mx-1">to</span>
+        <input id="endDateFilter" type="date" @bind="endDateFilter" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <input id="searchDebts" type="text" placeholder="Search"
+        class="border-gray-300 p-lg-2 text-gray-800 w-full rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        @bind="searchQuery" @oninput="OnSearchInputChanged" />
+    </div>
+
+    <div>
+        <button class="p-2 rounded-md bg-[#00B2B2]" @onclick="() => FilterDebts()">Filter</button>
+    </div>
+</div>
+
+<div class="mb-6 gap-6 grid grid-cols-1 md:grid-cols-3">
+    @* Total Debt *@
+    <div class="bg-green-100 p-4 rounded shadow">
+        <div class="align-center flex w-full justify-between">
+            <p class="text-sm">Total Debts</p>
+            <p class="text-sm">@DebtsNumb</p>
+        </div>
+        <p class="text-lg font-semibold">
+            @if (!FilteredDebts.Any())
+            {
+                <span>@userCurrency 0.00</span>
+            }
+            else
+            {
+                <span>@userCurrency @OverallDebts</span>
+            }
+        </p>
+    </div>
+
+    @* Debt Cleared *@
+    <div class="bg-red-100 p-4 rounded shadow">
+        <div class="align-center flex w-full justify-between">
+            <p class="text-sm">Debt Cleared</p>
+            <p class="text-sm">@ClearedDebtsNumb</p>
+        </div>
+        <p class="text-lg font-semibold">
+            @if (!FilteredDebts.Any())
+            {
+                <span>@userCurrency 0.00</span>
+            }
+            else
+            {
+                <span>@userCurrency @OverallCleared</span>
+            }
+        </p>
+    </div>
+
+    @* Total Debt Remaining *@
+    <div class="bg-blue-100 p-4 rounded shadow">
+        <div class="align-center flex w-full justify-between">
+            <p class="text-sm">Total Debt Remaining</p>
+            <p class="text-sm">@RemainingDebtsNumb</p>
+        </div>
+        <p class="text-lg font-semibold">
+            @if (!FilteredDebts.Any())
+            {
+                <span>@userCurrency 0.00</span>
+            }
+            else
+            {
+                <span>@userCurrency @OverallRemaining</span>
+            }
+        </p>
+    </div>
+</div>
+
+@* Debts Table *@
+@if (FilteredDebts == null || FilteredDebts.Count == 0)
+{
+    <p>No debts available.</p>
+}
+else
+{
+    <div class="bg-white p-8 rounded-lg border-2 border-[#00B2B2] shadow-sm">
+        <table class="min-w-full table-auto">
+            <thead>
+                <tr class="border-black px-4 py-2 border-b-2 text-center">
+                    <th>Source</th>
+                    <th>Amount</th>
+                    <th>Taken Date</th>
+                    <th>Interest Rate</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th>Notes</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var debt in FilteredDebts)
+                {
+                    <tr class="px-4 py-2 border-b text-center">
+                        <td class="px-4 py-2">@debt.Source</td>
+                        <td class="px-4 py-2">@userCurrency @debt.Amount</td>
+                        <td class="px-4 py-2">@debt.Taken_Date.ToShortDateString()</td>
+                        <td class="px-4 py-2">@(debt.Interest_Rate == null ? "0" : debt.Interest_Rate)</td>
+                        <td class="px-4 py-2">@debt.Due_Date.ToShortDateString()</td>
+                        <td class="px-4 py-2">@(debt.Is_Cleared ? "Cleared" : "Pending")</td>
+                        <td class="px-4 py-2">@(debt.Notes == null ? "-" : debt.Notes)</td>
+                        <td class="align-center justify-content-center space-x-2 px-4 py-2 flex">
+                            <button @onclick="() => OpenModal(debt)">
+                                <img src="Images/edit.svg" alt="edit" class="w-5" />
+                            </button>
+                            <button @onclick="() => DeleteDebt(debt)"><img src="Images/delete.svg" alt="delete" class="w-5" /></button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (isDeleteConfirmationVisible)
+{
+    <div class="inset-0 bg-gray-900 fixed z-50 flex items-center justify-center bg-opacity-50">
+        <div class="bg-white p-6 w-full max-w-sm rounded-md shadow-lg">
+            <h3 class="text-gray-800 text-xl font-semibold">Are you sure you want to delete this debt?</h3>
+            <div class="mt-4">
+                <button class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-700" @onclick="ConfirmDelete">
+                    Yes, Delete
+                </button>
+                <button class="px-4 py-2 ml-3 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-500" @onclick="CancelDelete">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+
+@* Modal *@
+@if (isModalVisible)
+{
+    <div class="modal d-block" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@modalTitle</h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    @if (!string.IsNullOrWhiteSpace(modalErrorMessage))
+                    {
+                        <div class="alert alert-danger">@modalErrorMessage</div>
+                    }
+                    <div class="mb-3">
+                        <label for="debtSource" class="form-label">Source:</label>
+                        <input id="debtSource" @bind="newDebt.Source" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="debtAmount" class="form-label">Amount:</label>
+                        <input id="debtAmount" @bind="newDebt.Amount" type="number" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="debtTakenDate" class="form-label">Taken Date:</label>
+                        <input id="debtTakenDate" @bind="newDebt.Taken_Date" type="date" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="debtInterest" class="form-label">Interest Rate:</label>
+                        <input id="debtInterest" @bind="newDebt.Interest_Rate" type="number" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="debtDueDate" class="form-label">Due Date:</label>
+                        <input id="debtDueDate" @bind="newDebt.Due_Date" type="date" class="form-control" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="debtIs_Cleared" class="form-label">Is Cleared:</label>
+                        <input id="debtIs_Cleared" @bind="newDebt.Is_Cleared" type="checkbox" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="debtNotes" class="form-label">Notes:</label>
+                        <textarea id="debtNotes" @bind="newDebt.Notes" class="form-control"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
+                    <button type="button" class="btn btn-success" @onclick="AddOrUpdateDebt">@modalButtonText</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    string userName = string.Empty;
+    string userCurrency = string.Empty;
+    double userBalance = 0.00;
+
+    private double OverallDebts { get; set; }
+    private double OverallCleared { get; set; }
+    private double OverallRemaining => OverallDebts - OverallCleared;
+
+    private int DebtsNumb = 0;
+    private int ClearedDebtsNumb = 0;
+    private int RemainingDebtsNumb = 0;
+
+    private string LoggedInUserName { get; set; }
+
+    private List<Debts> AllDebts { get; set; } = new List<Debts>();
+    private List<Debts> FilteredDebts { get; set; } = new List<Debts>();
+    private Debts newDebt = new Debts();
+
+    private bool isDeleteConfirmationVisible = false;
+    private Debts debtToDelete = null;
+
+    // Filter and search
+    private string searchQuery = string.Empty;
+    public DateTime? startDateFilter { get; set; }
+    public DateTime? endDateFilter { get; set; }
+
+    private bool isEditing = false;
+    private bool isModalVisible = false;
+    private string modalTitle = "Add New Debt";
+    private string modalButtonText = "Add Debt";
+
+    private string? errorMessage;
+    private string? modalErrorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageTitleService.PageTitle = "Debt Overview";
+
+        var loggedInUser = await MapUser.GetUserByUsernameAsync(Storage);
+        if (loggedInUser != null)
+        {
+            LoggedInUserName = loggedInUser.Name;
+
+            userName = loggedInUser.UserName;
+            userBalance = loggedInUser.Balance;
+            userCurrency = loggedInUser.CurrencyCode;
+
+            AllDebts = await DebtService.LoadAllDebtsAsync();
+            FilterDebts();
+        }
+        else
+        {
+            Navigation.NavigateTo("/login");
+        }
+
+    }
+
+    private void FilterDebts()
+    {
+        var filteredDebts = AllDebts.Where(d => d.UserName == userName);
+
+        if (startDateFilter.HasValue)
+        {
+            filteredDebts = filteredDebts.Where(d => d.Taken_Date >= startDateFilter.Value);
+        }
+
+        if (endDateFilter.HasValue)
+        {
+            filteredDebts = filteredDebts.Where(d => d.Taken_Date <= endDateFilter.Value);
+        }
+
+        if (!string.IsNullOrEmpty(searchQuery))
+        {
+            filteredDebts = filteredDebts.Where(t => t.Source.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
+        }
+
+        FilteredDebts = filteredDebts.ToList();
+        UpdateTotals();
+    }
+
+    private void UpdateTotals()
+    {
+        OverallDebts = FilteredDebts.Sum(d => d.Amount);
+
+        OverallCleared = FilteredDebts
+            .Where(d => d.Is_Cleared == true)
+            .Sum(d => d.Amount);
+
+        DebtsNumb = FilteredDebts.Count();
+        ClearedDebtsNumb = FilteredDebts.Where(t => t.Is_Cleared == true).Count();
+        RemainingDebtsNumb = FilteredDebts.Where(t => t.Is_Cleared == false).Count();
+    }
+
+    private void OnSearchInputChanged(ChangeEventArgs e)
+    {
+        searchQuery = e.Value?.ToString() ?? string.Empty;
+        FilterDebts();
+    }
+
+    private void OpenModal(Debts? debt = null)
+    {
+        if (debt != null)
+        {
+            newDebt = new Debts
+                {
+                    Id = debt.Id,
+                    User = debt.User,
+                    UserName = debt.UserName,
+                    Source = debt.Source,
+                    Amount = debt.Amount,
+                    Taken_Date = debt.Taken_Date,
+                    Interest_Rate = debt.Interest_Rate,
+                    Due_Date = debt.Due_Date,
+                    Is_Cleared = debt.Is_Cleared,
+                    Notes = debt.Notes
+                };
+            isEditing = true;
+            modalTitle = "Edit Debt";
+            modalButtonText = "Save Changes";
+        }
+        else
+        {
+            newDebt = new Debts();
+            isEditing = false;
+            modalTitle = "Add New Debt";
+            modalButtonText = "Add Debt";
+        }
+
+        isModalVisible = true;
+    }
+
+    private void CloseModal()
+    {
+        isModalVisible = false;
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        newDebt = new Debts();
+        isEditing = false;
+        errorMessage = null;
+    }
+    private bool ValidateTransaction()
+    {
+        if (string.IsNullOrWhiteSpace(newDebt.Source) || newDebt.Amount <= 0)
+        {
+            modalErrorMessage = "Source and Amount must be provided, and Amount must be greater than zero.";
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task AddOrUpdateDebt()
+    {
+        if (ValidateTransaction())
+        {
+            try
+            {
+                var loggedInUser = await MapUser.GetUserByUsernameAsync(Storage);
+                newDebt.User = loggedInUser;
+                newDebt.UserName = loggedInUser.UserName;
+
+                // For editing, revert the old debt balance first
+                if (isEditing)
+                {
+                    var existingDebt = await DebtService.GetDebtByIdAsync(newDebt.Id);
+                    if (existingDebt != null)
+                    {
+                        await DebtService.RevertUserBalanceDebt(loggedInUser, existingDebt);
+                    }
+                }
+
+                // Update balance based on the new debt type
+                await DebtService.UpdateUserBalanceDebt(loggedInUser, newDebt);
+
+                if (!isEditing) // Add new debt
+                {
+                    await DebtService.AddDebtAsync(newDebt);
+                }
+                else
+                {
+                    await DebtService.UpdateDebtAsync(newDebt);
+                }
+
+                await UserService.UpdateUserAsync(loggedInUser);
+                UpdateTotals();
+                await OnInitializedAsync();
+                CloseModal();
+            }
+            catch (Exception ex)
+            {
+                modalErrorMessage = $"Error saving debt: {ex.Message}";
+            }
+        }
+    }
+
+    private void DeleteDebt(Debts debt)
+    {
+        debtToDelete = debt;
+        isDeleteConfirmationVisible = true;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (debtToDelete != null)
+        {
+            try
+            {
+                // Get the logged-in user
+                var loggedInUser = await MapUser.GetUserByUsernameAsync(Storage);
+
+                // Revert the balance based on the type of the debt (Credit or Debit)
+                await DebtService.RevertUserBalanceDebt(loggedInUser, debtToDelete);
+
+                await UserService.UpdateUserAsync(loggedInUser);
+                await DebtService.DeleteDebtAsync(debtToDelete);
+                UpdateTotals();
+                await OnInitializedAsync();
+                isDeleteConfirmationVisible = false;
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Error deleting debt: {ex.Message}";
+            }
+        }
+    }
+
+    private void CancelDelete()
+    {
+        isDeleteConfirmationVisible = false;
+    }
+}

@@ -5,12 +5,15 @@ namespace PET.Models
     public class PreferencesStoreClone
     {
 
+        public event Action? OnChange;
+
         public void Set(string key, object value)
         {
             string keyvalue = JsonSerializer.Serialize(value);
             if (keyvalue != null && !string.IsNullOrEmpty(keyvalue))
             {
                 Preferences.Set(key, keyvalue);
+                OnChange?.Invoke();
             }
         }
 
@@ -29,6 +32,7 @@ namespace PET.Models
         public void Delete(string key)
         {
             Preferences.Remove(key);
+            OnChange?.Invoke();
         }
 
         public bool Exists(string key)
@@ -39,6 +43,7 @@ namespace PET.Models
         public void ClearAll()
         {
             Preferences.Clear();
+            OnChange?.Invoke();
         }
 
     }

@@ -4,7 +4,8 @@ namespace PET.Interfaces
 {
     public interface ITag
     {
-        Task SaveTagAsync(Tags tag);
+        Task AddTagAsync(Tags tag);
         Task<List<Tags>> LoadAllTagsAsync();
+        Task SaveAllTagAsync(List<Tags> tags);
     }
 }

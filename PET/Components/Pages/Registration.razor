@@ -10,82 +10,96 @@
 @inject IToastService ToastService
 @inject NavigationManager Navigation
 
-<h3 class="mb-4 text-gray-900 text-center text-4xl font-bold">Register</h3>
 @if (!string.IsNullOrWhiteSpace(errorMessage))
 {
     <div class="alert alert-danger mx-auto flex w-max">@errorMessage</div>
 }
-<div class="bg-white p-8 mx-auto max-w-lg rounded-lg shadow-xl">
-    <form class="space-y-3" @onsubmit="RegisterUser">
-        <div>
-            <label class="mb-2 text-gray-700 block text-lg font-medium">Username:</label>
-            <input type="text" @bind="newUser.UserName"
-                   class="border-gray-300 p-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-        </div>
+<div class="flex min-h-screen items-center justify-center">
+    <div class="bg-white p-8 mx-auto w-full max-w-3xl rounded-md border-2 border-[#3A8C8C] shadow-md">
+        <h3 class="mb-8 text-gray-800 text-center text-5xl font-bold">Register</h3>
+        <form class="gap-6 grid grid-cols-2" @onsubmit="RegisterUser">
+            @* Username *@
+            <div>
+                <label class="text-gray-700 block text-lg font-medium">Username:</label>
+                <input type="text" @bind="newUser.UserName"
+                       class="border-gray-300 p-2 text-gray-800 w-full rounded-md border focus:outline-none focus:ring-2 focus:ring-[#3A8C8C]" />
+            </div>
 
-        <div>
-            <label class="mb-2 text-gray-700 block text-lg font-medium">Full Name:</label>
-            <input type="text" @bind="newUser.Name"
-                   class="border-gray-300 p-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-        </div>
+            @* Full Name *@
+            <div>
+                <label class="text-gray-700 block text-lg font-medium">Full Name:</label>
+                <input type="text" @bind="newUser.Name"
+                       class="border-gray-300 p-2 text-gray-800 w-full rounded-md border focus:outline-none focus:ring-2 focus:ring-[#3A8C8C]" />
+            </div>
 
-        <div>
-            <label class="mb-2 text-gray-700 block text-lg font-medium">Email:</label>
-            <input type="email" @bind="newUser.Email"
-                   class="border-gray-300 p-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-        </div>
+            @* Email *@
+            <div>
+                <label class="text-gray-700 block text-lg font-medium">Email:</label>
+                <input type="email" @bind="newUser.Email"
+                       class="border-gray-300 p-2 text-gray-800 w-full rounded-md border focus:outline-none focus:ring-2 focus:ring-[#3A8C8C]" />
+            </div>
 
-        <div>
-            <label class="mb-2 text-gray-700 block text-lg font-medium">Password:</label>
-            <input type="password" @bind="newUser.Password"
-                   class="border-gray-300 p-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-        </div>
+            @* Password *@
+            <div>
+                <label class="text-gray-700 block text-lg font-medium">Password:</label>
+                <input type="password" @bind="newUser.Password"
+                       class="border-gray-300 p-2 text-gray-800 w-full rounded-md border focus:outline-none focus:ring-2 focus:ring-[#3A8C8C]" />
+            </div>
 
-        @* Currency *@
-        <div>
-            <label for="Currency" class="mb-2 text-gray-700 block text-lg font-medium">Currency:</label>
-            <InputSelect id="Currency" @bind-Value="newUser.CurrencyCode" class="border-gray-300 p-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <option value="">-- Select Currency --</option>
-                @foreach (var currency in Currencies)
-                {
-                    <option value="@currency.Code">@currency.Name (@currency.Code)</option>
-                }
-            </InputSelect>
-        </div>
+            @* Currency *@
+            <div>
+                <label for="Currency" class="text-gray-700 block text-lg font-medium">Currency:</label>
+                <InputSelect id="Currency" @bind-Value="newUser.CurrencyCode"
+                             class="border-gray-300 p-2 text-gray-800 w-full rounded-md border focus:outline-none focus:ring-2 focus:ring-[#3A8C8C]">
+                    <option value="">-- Select Currency --</option>
+                    @foreach (var currency in Currencies)
+                    {
+                        <option value="@currency.Code">@currency.Name (@currency.Code)</option>
+                    }
+                </InputSelect>
+            </div>
 
-        <div>
-            <label class="mb-2 text-gray-700 block text-lg font-medium">Address:</label>
-            <input type="text" @bind="newUser.Address"
-                   class="border-gray-300 p-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-        </div>
+            @* Address *@
+            <div>
+                <label class="text-gray-700 block text-lg font-medium">Address:</label>
+                <input type="text" @bind="newUser.Address"
+                       class="border-gray-300 p-2 text-gray-800 w-full rounded-md border focus:outline-none focus:ring-2 focus:ring-[#3A8C8C]" />
+            </div>
 
-        <div>
-            <label class="mb-2 text-gray-700 block text-lg font-medium">Gender:</label>
-            <select @bind="newUser.Gender"
-                    class="border-gray-300 p-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <option value="">-- Select Gender --</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-            </select>
-        </div>
+            @* Gender *@
+            <div>
+                <label class="text-gray-700 block text-lg font-medium">Gender:</label>
+                <select @bind="newUser.Gender"
+                        class="border-gray-300 p-2 text-gray-800 w-full rounded-md border focus:outline-none focus:ring-2 focus:ring-[#3A8C8C]">
+                    <option value="">-- Select Gender --</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
 
-        <div>
-            <label class="mb-2 text-gray-700 block text-lg font-medium">Phone:</label>
-            <input type="tel" @bind="newUser.Phone"
-                   class="border-gray-300 p-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-        </div>
-        <div>
-            <label class="mb-2 text-gray-700 block text-lg font-medium">Balance:</label>
-            <input type="number" @bind="newUser.Balance"
-                   class="border-gray-300 p-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-        </div>
-        <button type="submit"
-                class="bg-blue-500 py-3 text-white w-full rounded-lg text-lg font-medium transition-all hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            Register
-        </button>
-    </form>
-    <p class="text-center">Already have an account? <a href="/login">Login here!</a></p>
+            @* Phone *@
+            <div>
+                <label class="text-gray-700 block text-lg font-medium">Phone:</label>
+                <input type="tel" @bind="newUser.Phone"
+                       class="border-gray-300 p-2 text-gray-800 w-full rounded-md border focus:outline-none focus:ring-2 focus:ring-[#3A8C8C]" />
+            </div>
+
+            @* Balance *@
+            <div class="col-span-2">
+                <label class="text-gray-700 block text-lg font-medium"> Initial Balance:</label>
+                <input type="number" @bind="newUser.Balance"
+                       class="border-gray-300 p-2 text-gray-800 w-full rounded-md border focus:outline-none focus:ring-2 focus:ring-[#3A8C8C]" />
+            </div>
+
+            @* Submit Button *@
+            <button type="submit"
+                    class="py-2 text-white col-span-2 w-full rounded-md bg-[#006B6B] text-lg font-medium hover:bg-[#3A8C8C] focus:outline-none focus:ring-2 focus:ring-[#3A8C8C]">
+                Register
+            </button>
+        </form>
+        <p class="text-center">Already have an account? <a href="/login" class="text-blue-500">Login here!</a></p>
+    </div>
 </div>
 
 @code {
@@ -146,7 +160,7 @@
                 newUser.Currency = selectedCurrency; // Set the complete Currency object
             }
 
-            await UserService.SaveUserAsync(newUser);
+            await UserService.AddUserAsync(newUser);
             errorMessage = null; // Clear error
             ToastService.ShowSuccess("User registered successfully!");
 
