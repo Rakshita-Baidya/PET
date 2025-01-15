@@ -5,6 +5,10 @@
 @using PET.Services
 @using Blazored.Toast.Services
 @using PET.Helper
+@using CommunityToolkit.Maui
+@using OfficeOpenXml
+@using OfficeOpenXml.Style
+@using CommunityToolkit.Maui.Storage
 
 @inject PreferencesStoreClone Storage
 @inject MapUser MapUser
@@ -24,6 +28,11 @@
     <div class="mb-3">
         <button class="btn btn-primary" @onclick="() => OpenModal()">Add Debt</button>
     </div>
+    @* export to excel *@
+    <button class="p-2 text-white rounded-md bg-[#00B2B2]" @onclick="SaveToExcel">
+        Export to Excel 
+    </button>
+
 </div>
 
 @* Filter Controls *@
@@ -231,7 +240,7 @@ else
                         <label for="debtDueDate" class="form-label">Due Date:</label>
                         <input id="debtDueDate" @bind="newDebt.Due_Date" type="date" class="form-control" />
                     </div>
-                        @* min="@DateTime.Now.ToString(" yyyy-MM-dd ")"*@
+                    @* min="@DateTime.Now.ToString(" yyyy-MM-dd ")"*@
                     <div class="mb-3">
                         <label for="debtNotes" class="form-label">Notes:</label>
                         <textarea id="debtNotes" @bind="newDebt.Notes" class="form-control"></textarea>
@@ -318,7 +327,6 @@ else
         FilterDebts();
     }
 
-
     private void FilterDebts()
     {
         var filteredDebts = AllDebts.Where(d => d.UserName == userName);
@@ -360,6 +368,23 @@ else
         searchQuery = e.Value?.ToString() ?? string.Empty;
         FilterDebts();
     }
+
+    // private async Task ExportToExcel()
+    // {
+    //     Define the file path to save the Excel file
+    //     var outputFilePath = Path.Combine(Directory.GetCurrentDirectory(), "DebtsExport.xlsx");
+
+    //     try
+    //     {
+    //         Call the service to export debts
+    //         await DebtService.ExportDebtsToExcelAsync(outputFilePaths);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         Handle error (e.g., show an error message)
+    //         Console.WriteLine($"Error: {ex.Message}");
+    //     }
+    // }
 
     private void OpenModal(Debts? debt = null)
     {
@@ -404,6 +429,7 @@ else
         newDebt = new Debts();
         isEditing = false;
     }
+
     private bool ValidateDebt()
     {
         if (string.IsNullOrWhiteSpace(newDebt.Source) || newDebt.Amount <= 0)
@@ -463,11 +489,15 @@ else
     {
         // If the debt is not overdue or is already cleared, no interest
         if (debt.Due_Date >= currentDate || debt.Is_Cleared)
+        {
             return 0;
+        }
 
         int overdueMonths = ((currentDate.Year - debt.Due_Date.Year) * 12) + currentDate.Month - debt.Due_Date.Month;
-        if (overdueMonths <= 0) return 0; // No interest if not overdue
-
+        if (overdueMonths <= 0) 
+        {
+            return 0; // No interest if not overdue
+        }
         decimal interestRate = debt.Interest_Rate / 100;
         double principal = debt.Amount;
 
@@ -481,8 +511,6 @@ else
 
         return Math.Round(interest, 2); // Return the interest only
     }
-
-
 
     // for changing Is_Cleared status of existing debts
     private async Task ConfirmClear()
@@ -529,6 +557,49 @@ else
         }
     }
 
+    private async Task SaveToExcel()
+    {
+        try
+        {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial; // Set EPPlus license context
+
+            var debtService = new DebtService();
+
+            // Get the Excel file path
+            var fileName = "Debts.xlsx";
+            var filePath = Path.Combine(FileSystem.AppDataDirectory, fileName);
+
+            // Ensure the directory exists
+            var directory = Path.GetDirectoryName(filePath);
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            // Save debts to the Excel file
+            await debtService.ExportDebtsToExcelAsync(filePath);
+
+            // Read the file into a MemoryStream
+            var fileBytes = File.ReadAllBytes(filePath);
+            using var stream = new MemoryStream(fileBytes);
+
+            // Save the file using FileSaver
+            var result = await FileSaver.Default.SaveAsync(fileName, stream);
+
+            if (result.IsSuccessful)
+            {
+                ToastService.ShowSuccess($"File saved to {result.FilePath}");
+            }
+            else
+            {
+                ToastService.ShowError("File save canceled or failed.");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Error saving to Excel: {ex.Message}");
+        }
+    }
 
     private async Task ClearDebt(Debts debt)
     {
@@ -549,7 +620,6 @@ else
             isClearConfirmationVisible = true;
         }
     }
-
 
     private void CancelClear()
     {

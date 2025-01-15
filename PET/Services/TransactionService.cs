@@ -1,7 +1,8 @@
-﻿using PET.Interfaces;
+﻿using OfficeOpenXml;
+using OfficeOpenXml.Style;
+using PET.Interfaces;
 using PET.Models;
 using System.Text.Json;
-
 
 namespace PET.Services
 {
@@ -123,6 +124,66 @@ namespace PET.Services
             {
                 Console.WriteLine($"Error updating transaction: {ex.Message}");
                 throw;
+            }
+        }
+
+        //export to excel
+        public async Task ExportTransactionsToExcelAsync(string filePath)
+        {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            try
+            {
+                var transactions = await LoadAllTransactionsAsync();
+                if (transactions == null || !transactions.Any())
+                {
+                    Console.WriteLine("No transactions available to export.");
+                    return;
+                }
+
+                using var package = new ExcelPackage();
+                var worksheet = package.Workbook.Worksheets.Add("Transactions");
+
+                // Add headers
+                worksheet.Cells[1, 1].Value = "Transaction ID";
+                worksheet.Cells[1, 2].Value = "Name";
+                worksheet.Cells[1, 3].Value = "Amount";
+                worksheet.Cells[1, 4].Value = "Type";
+                worksheet.Cells[1, 5].Value = "Date";
+                worksheet.Cells[1, 6].Value = "Payment Method";
+                worksheet.Cells[1, 7].Value = "Tag";
+                worksheet.Cells[1, 8].Value = "Notes";
+
+                // Style headers
+                using (var range = worksheet.Cells[1, 1, 1, 8])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+
+                // Populate transaction data
+                for (int i = 0; i < transactions.Count; i++)
+                {
+                    var transaction = transactions[i];
+                    worksheet.Cells[i + 2, 1].Value = transaction.Id.ToString();
+                    worksheet.Cells[i + 2, 2].Value = transaction.Title;
+                    worksheet.Cells[i + 2, 3].Value = transaction.Amount;
+                    worksheet.Cells[i + 2, 4].Value = transaction.TransactionType;
+                    worksheet.Cells[i + 2, 5].Value = transaction.Date.ToShortDateString();
+                    worksheet.Cells[i + 2, 6].Value = transaction.PaymentMethod;
+                    worksheet.Cells[i + 2, 7].Value = transaction.TagName;
+                    worksheet.Cells[i + 2, 8].Value = transaction.Notes;
+                }
+
+                // Auto-fit columns
+                worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
+                // Save the Excel file to the specified path
+                await File.WriteAllBytesAsync(filePath, package.GetAsByteArray());
+                Console.WriteLine($"Excel file saved successfully at {filePath}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving Excel file: {ex.Message}");
             }
         }
 

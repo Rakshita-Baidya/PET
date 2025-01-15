@@ -1,4 +1,5 @@
-﻿using PET.Interfaces;
+﻿using OfficeOpenXml;
+using PET.Interfaces;
 using PET.Models;
 using System.Text.Json;
 
@@ -124,6 +125,57 @@ namespace PET.Services
             {
                 Console.WriteLine($"Error updating debt: {ex.Message}");
                 throw;
+            }
+        }
+
+        //export to excel
+        public async Task ExportDebtsToExcelAsync(string filePath)
+        {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            try
+            {
+                var debts = await LoadAllDebtsAsync();
+                if (debts == null || !debts.Any())
+                {
+                    Console.WriteLine("No debts available to export.");
+                    return;
+                }
+
+                using var package = new ExcelPackage();
+                var worksheet = package.Workbook.Worksheets.Add("Debts");
+
+                // Add headers
+                worksheet.Cells[1, 1].Value = "Source";
+                worksheet.Cells[1, 2].Value = "Amount";
+                worksheet.Cells[1, 3].Value = "Taken Date";
+                worksheet.Cells[1, 4].Value = "Interest Rate";
+                worksheet.Cells[1, 5].Value = "Due Date";
+                worksheet.Cells[1, 6].Value = "Status";
+                worksheet.Cells[1, 7].Value = "Notes";
+
+                // Add data rows
+                for (int i = 0; i < debts.Count; i++)
+                {
+                    var debt = debts[i];
+                    worksheet.Cells[i + 2, 1].Value = debt.Source;
+                    worksheet.Cells[i + 2, 2].Value = $"{debt.Amount:C}";
+                    worksheet.Cells[i + 2, 3].Value = debt.Taken_Date.ToShortDateString();
+                    worksheet.Cells[i + 2, 4].Value = debt.Interest_Rate;
+                    worksheet.Cells[i + 2, 5].Value = debt.Due_Date.ToShortDateString();
+                    worksheet.Cells[i + 2, 6].Value = debt.Is_Cleared ? "Cleared" : "Pending";
+                    worksheet.Cells[i + 2, 7].Value = debt.Notes;
+                }
+
+                // Auto-fit columns
+                worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
+                // Save workbook
+                await File.WriteAllBytesAsync(filePath, package.GetAsByteArray());
+                Console.WriteLine($"Excel file saved successfully at {filePath}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error exporting debts to Excel: {ex.Message}");
             }
         }
 

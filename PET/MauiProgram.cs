@@ -1,4 +1,5 @@
 ﻿using Blazored.Toast;
+using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
 using PET.Helper;
 using PET.Interfaces;
@@ -14,6 +15,7 @@ namespace PET
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
+                .UseMauiCommunityToolkit()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

@@ -10,6 +10,7 @@ namespace PET.Interfaces
         Task DeleteTransactionAsync(Transactions transaction);
         Task UpdateUserBalanceTransaction(Users user, Transactions transaction);
         Task RevertUserBalanceTransaction(Users user, Transactions transaction);
+        Task ExportTransactionsToExcelAsync(string filePath);
         Task<Transactions> GetTransactionByIdAsync(Guid transactionId);
     }
 }

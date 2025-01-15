@@ -1,10 +1,14 @@
 ﻿@page "/transaction"
 
+@using CommunityToolkit.Maui.Storage
 @using PET.Models
 @using PET.Interfaces
 @using PET.Services
 @using Blazored.Toast.Services
 @using PET.Helper
+@using CommunityToolkit.Maui
+@using OfficeOpenXml
+@using OfficeOpenXml.Style
 
 @inject PreferencesStoreClone Storage
 @inject MapUser MapUser
@@ -24,6 +28,9 @@
     @* Add Transaction Button *@
     <div class="mb-3">
         <button class="btn btn-primary" @onclick="() => OpenModal()">Add Transaction</button>
+    </div>
+    <div class="mb-3">
+        <button class="btn btn-primary" @onclick="SaveToExcel">Save to Excel</button>
     </div>
 </div>
 
@@ -369,6 +376,50 @@ else
 
         FilteredTransactions = filteredTransactions.ToList();
         UpdateTotals();
+    }
+
+    private async Task SaveToExcel()
+    {
+        try
+        {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial; // Set EPPlus license context
+
+            var transactionService = new TransactionService();
+
+            // Get the Excel file path
+            var fileName = "Transactions.xlsx";
+            var filePath = Path.Combine(FileSystem.AppDataDirectory, fileName);
+
+            // Ensure the directory exists
+            var directory = Path.GetDirectoryName(filePath);
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            // Save transactions to the Excel file
+            await transactionService.ExportTransactionsToExcelAsync(filePath);
+
+            // Read the file into a MemoryStream
+            var fileBytes = File.ReadAllBytes(filePath);
+            using var stream = new MemoryStream(fileBytes);
+
+            // Save the file using FileSaver
+            var result = await FileSaver.Default.SaveAsync(fileName, stream);
+
+            if (result.IsSuccessful)
+            {
+                ToastService.ShowSuccess($"File saved to {result.FilePath}");
+            }
+            else
+            {
+                ToastService.ShowError("File save canceled or failed.");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Error saving to Excel: {ex.Message}");
+        }
     }
 
     private void UpdateTotals()
