@@ -4,19 +4,20 @@
 @using PET.Interfaces
 @using PET.Services
 @using PET.Helper
+@using Blazored.Toast.Services
 
+@inject IToastService ToastService
 @inject PageTitleService PageTitleService
-@inject ITransaction TransactionService
-@inject IDebt DebtService
+@inject NavigationManager Navigation
 @inject PreferencesStoreClone Storage
 @inject MapUser MapUser
-@inject NavigationManager Navigation
+@inject ITransaction TransactionService
+@inject IDebt DebtService
 
 
 <h2 class="mb-6 text-2xl font-bold">
     Available Balance: @userCurrency @userBalance
 </h2>
-
 
 <div class="mb-6 justify-content-between flex items-center">
     @* Date Range Filter *@
@@ -29,7 +30,8 @@
         </div>
     </div>
     <div>
-        <button class="p-2 rounded-md bg-[#00B2B2]" @onclick="() => FilterData()">Filter</button>
+        <button class="p-2 rounded-md bg-[#00B2B2]" @onclick="FilterData">Filter</button>
+        <button class="p-2 rounded-md bg-[#00B2B2]" @onclick="ClearFilters">Clear Filters</button>
     </div>
 </div>
 
@@ -236,8 +238,6 @@
             }
         </ul>
     </div>
-
-
 </div>
 
 
@@ -281,6 +281,10 @@
                 userCurrency = loggedInUser.CurrencyCode;
                 userBalance = loggedInUser.Balance;
 
+                var currentDate = DateTime.Now;
+                startDateFilter = new DateTime(currentDate.Year, currentDate.Month, 1); 
+                endDateFilter = startDateFilter.Value.AddMonths(1).AddDays(-1);
+
                 // Load all transactions
                 AllTransactions = await TransactionService.LoadAllTransactionsAsync();
 
@@ -299,7 +303,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading dashboard data: {ex.Message}");
+            ToastService.ShowError($"Error loading dashboard data: {ex.Message}");
         }
     }
     private void FilterData()
@@ -307,6 +311,16 @@
         FilterTransactions();
         FilterDebts();
     }
+
+    private void ClearFilters()
+    {
+        startDateFilter = null;
+        endDateFilter = null;
+
+        FilterTransactions();
+        FilterDebts();
+    }
+
 
     private void FilterTransactions()
     {

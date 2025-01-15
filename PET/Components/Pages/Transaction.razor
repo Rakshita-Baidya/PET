@@ -13,13 +13,9 @@
 @inject ITransaction TransactionService
 @inject ITag TagService
 @inject IUser UserService
+
 @inject NavigationManager Navigation
 @inject IToastService ToastService
-
-@if (!string.IsNullOrWhiteSpace(errorMessage))
-{
-    <div class="alert alert-danger">@errorMessage</div>
-}
 
 <div class="justify-content-between flex">
     <h2 class="mb-6 text-2xl font-bold">
@@ -55,21 +51,22 @@
 
     @* Date Range Filter *@
     <div class="flex items-center">
-            <input id="startDateFilter" type="date" @bind="startDateFilter" class="form-control" />
-            <span class="mx-1">to</span>
-            <input id="endDateFilter" type="date" @bind="endDateFilter" class="form-control" />
+        <input id="startDateFilter" type="date" @bind="startDateFilter" class="form-control" />
+        <span class="mx-1">to</span>
+        <input id="endDateFilter" type="date" @bind="endDateFilter" class="form-control" />
     </div>
 
     <div>
-        <button class="p-2 rounded-md bg-[#00B2B2]" @onclick="() => FilterTransactions()">Filter</button>
+        <button class="p-2 rounded-md bg-[#00B2B2]" @onclick="FilterTransactions">Filter</button>
+        <button class="p-2 rounded-md bg-[#00B2B2]" @onclick="ClearFilters">Clear Filters</button>
     </div>
 </div>
 
 @* Search Input Field *@
 <div class="mb-3">
     <input id="searchTransactions" type="text" placeholder="Search"
-           class="border-gray-300 p-lg-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-           @bind="searchQuery" @oninput="OnSearchInputChanged" />
+    class="border-gray-300 p-lg-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+    @bind="searchQuery" @oninput="OnSearchInputChanged" />
 </div>
 
 <div class="mb-6 gap-6 grid grid-cols-1 md:grid-cols-3">
@@ -202,10 +199,6 @@ else
                 </div>
 
                 <div class="modal-body">
-                    @if (!string.IsNullOrWhiteSpace(modalErrorMessage))
-                    {
-                        <div class="alert alert-danger">@modalErrorMessage</div>
-                    }
                     <div class="mb-3">
                         <label for="transactionTitle" class="form-label">Title:</label>
                         <input id="transactionTitle" @bind="newTransaction.Title" class="form-control" />
@@ -306,10 +299,6 @@ else
     private string modalTitle = "Add New Transaction";
     private string modalButtonText = "Add Transaction";
 
-    //initialize value for error message
-    private string? errorMessage;
-    private string? modalErrorMessage;
-
     protected override async Task OnInitializedAsync()
     {
         PageTitleService.PageTitle = "Transaction Overview";
@@ -323,6 +312,9 @@ else
             userName = loggedInUser.UserName;
             userBalance = loggedInUser.Balance;
             userCurrency = loggedInUser.CurrencyCode;
+            var currentDate = DateTime.Now;
+            startDateFilter = new DateTime(currentDate.Year, currentDate.Month, 1);
+            endDateFilter = startDateFilter.Value.AddMonths(1).AddDays(-1);
 
             AllTransactions = await TransactionService.LoadAllTransactionsAsync();
             FilterTransactions();
@@ -333,6 +325,18 @@ else
         }
 
     }
+
+    private void ClearFilters()
+    {
+        transactionTypeFilter = null;
+        tagFilter = null;
+        startDateFilter = null;
+        endDateFilter = null;
+
+        FilterTransactions();
+        ToastService.ShowSuccess("Filters Cleared");
+    }
+
 
     private void FilterTransactions()
     {
@@ -365,7 +369,6 @@ else
 
         FilteredTransactions = filteredTransactions.ToList();
         UpdateTotals();
-
     }
 
     private void UpdateTotals()
@@ -432,7 +435,6 @@ else
     {
         newTransaction = new Transactions();
         isEditing = false;
-        errorMessage = null;
     }
 
     private async Task OnTagInputChanged(ChangeEventArgs e)
@@ -485,19 +487,19 @@ else
     {
         if (string.IsNullOrWhiteSpace(newTransaction.Title) || newTransaction.Amount <= 0)
         {
-            modalErrorMessage = "Title and Amount must be provided, and Amount must be greater than zero.";
+            ToastService.ShowError("Title and Amount must be provided, and Amount must be greater than zero.");
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(newTransaction.TransactionType))
         {
-            modalErrorMessage = "Transaction type must be selected";
+            ToastService.ShowError("Transaction type must be selected");
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(newTransaction.PaymentMethod))
         {
-            modalErrorMessage = "Payment method must be selected";
+            ToastService.ShowError("Payment method must be selected");
             return false;
         }
 
@@ -532,10 +534,12 @@ else
                 if (!isEditing) // Add new transaction
                 {
                     await TransactionService.AddTransactionAsync(newTransaction);
+                    ToastService.ShowSuccess("Transaction Added");
                 }
                 else
                 {
                     await TransactionService.UpdateTransactionAsync(newTransaction);
+                    ToastService.ShowSuccess("Transaction Updated");
                 }
 
                 await UserService.UpdateUserAsync(loggedInUser);
@@ -545,7 +549,7 @@ else
             }
             catch (Exception ex)
             {
-                modalErrorMessage = $"Error saving transaction: {ex.Message}";
+                ToastService.ShowError($"Error saving transaction: {ex.Message}");
             }
         }
     }
@@ -595,10 +599,11 @@ else
                 UpdateTotals();
                 await OnInitializedAsync();
                 isDeleteConfirmationVisible = false;
+                ToastService.ShowSuccess("Transaction Deleted");
             }
             catch (Exception ex)
             {
-                errorMessage = $"Error deleting transaction: {ex.Message}";
+                ToastService.ShowError($"Error deleting transaction: {ex.Message}");
             }
         }
     }

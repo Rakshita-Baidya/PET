@@ -10,10 +10,6 @@
 @inject IToastService ToastService
 @inject NavigationManager Navigation
 
-@if (!string.IsNullOrWhiteSpace(errorMessage))
-{
-    <div class="alert alert-danger mx-auto flex w-max">@errorMessage</div>
-}
 <div class="flex min-h-screen items-center justify-center">
     <div class="bg-white p-8 mx-auto w-full max-w-3xl rounded-md border-2 border-[#3A8C8C] shadow-md">
         <h3 class="mb-8 text-gray-800 text-center text-5xl font-bold">Register</h3>
@@ -105,7 +101,6 @@
 @code {
     private List<Currencies> Currencies { get; set; } = new List<Currencies>();
     private Users newUser = new Users();
-    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -115,7 +110,7 @@
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error loading currencies: {ex.Message}";
+            ToastService.ShowError($"Error loading currencies: {ex.Message}");
         }
     }
 
@@ -123,34 +118,27 @@
     {
         if (string.IsNullOrEmpty(newUser.UserName) || string.IsNullOrEmpty(newUser.Password) || string.IsNullOrEmpty(newUser.Email))
         {
-            errorMessage = "Username, Email, and Password are required.";
-            ToastService.ShowError(errorMessage);
+            ToastService.ShowError("Username, Email, and Password are required.");
             return;
         }
         if (newUser.Gender == null || newUser.Address == null || newUser.Phone == null)
         {
-            errorMessage = "All fields need to be filled";
-            ToastService.ShowError(errorMessage);
+            ToastService.ShowError("All fields need to be filled");
             return;
         }
         if (newUser.CurrencyCode == null)
         {
-            errorMessage = "Currency must be set.";
-            ToastService.ShowError(errorMessage);
+            ToastService.ShowError("Currency must be set.");
             return;
         }
         if (newUser.Balance < 0)
         {
-            errorMessage = "Initial balance is cannot be less than zero(0).";
-            ToastService.ShowError(errorMessage);
+            ToastService.ShowError("Initial balance is cannot be less than zero(0).");
             return;
         }
 
         try
         {
-            // Hash the password using bcrypt
-            // newUser.Password = BCrypt.Net.BCrypt.HashPassword(newUser.Password);
-
             newUser.Password = UserService.HashPassword(newUser.Password);
 
             // Manually map CurrencyCode to Currency object
@@ -161,19 +149,14 @@
             }
 
             await UserService.AddUserAsync(newUser);
-            errorMessage = null; // Clear error
             ToastService.ShowSuccess("User registered successfully!");
 
-            // Redirect to login or dashboard after successful registration
-            Navigation.NavigateTo("/login");
-
-            // Reset form after successful registration
             newUser = new Users();
+            Navigation.NavigateTo("/login");
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error registering user: {ex.Message}";
-            ToastService.ShowError(errorMessage);
+            ToastService.ShowError($"Error registering user: {ex.Message}");
         }
     }
 }

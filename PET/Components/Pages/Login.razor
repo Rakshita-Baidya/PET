@@ -5,9 +5,10 @@
 @using PET.Services
 @using Blazored.Toast.Services
 
+@inject PreferencesStoreClone Storage
+@inject NavigationManager Navigation
 @inject IToastService ToastService
 @inject IUser UserService
-@inject NavigationManager Navigation
 
 
 <div class="flex min-h-screen items-center justify-center">
@@ -38,8 +39,6 @@
 @code {
     private string UserName = string.Empty;
     private string Password = string.Empty;
-    [Inject]
-    private PreferencesStoreClone Storage { get; set; }
 
     private async Task LoginUser()
     {
@@ -50,8 +49,6 @@
         }
         else
         {
-
-
             try
             {
                 var users = await UserService.LoadAllUsersAsync();
@@ -59,18 +56,14 @@
 
                 if (user != null)
                 {
-                    // Validate password using bcrypt
-                    // bool isPasswordValid = BCrypt.Net.BCrypt.Verify(UserInput.Password, user.Password);
-
-
                     if (UserService.PasswordValidation(Password, user.Password))
                     {
                         Storage.Set("Username", UserName);
                         string savedUsername = Preferences.Get("Username", string.Empty);
-                        // Show success message and redirect
+
                         ToastService.ShowSuccess("Login successful!");
                         await Task.Delay(100);
-                        Navigation.NavigateTo("/dashboard"); // Use NavigationManager for redirection
+                        Navigation.NavigateTo("/dashboard");
                     }
                     else
                     {

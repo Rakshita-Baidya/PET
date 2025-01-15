@@ -3,14 +3,20 @@
 @using PET.Models
 @using PET.Interfaces
 @using PET.Services
-@inject IUser UserService
-@inject NavigationManager Navigation
 @using PET.Helper
 
+@inject IUser UserService
+@inject NavigationManager Navigation
+@inject IToastService ToastService;
 @inject PreferencesStoreClone Storage
 @inject MapUser MapUser
+@using Blazored.Toast.Configuration
 
-<BlazoredToasts />
+<BlazoredToasts Position="ToastPosition.TopRight"
+                Timeout="5"
+                ShowProgressBar="@true"
+                ShowCloseButton="@true"
+                MaxToastCount="3"/>
 
 @if (IsLoggedIn)
 {

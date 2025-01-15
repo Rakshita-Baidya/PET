@@ -12,13 +12,9 @@
 @inject PageTitleService PageTitleService
 @inject IDebt DebtService
 @inject IUser UserService
+
 @inject NavigationManager Navigation
 @inject IToastService ToastService
-
-@if (!string.IsNullOrWhiteSpace(errorMessage))
-{
-    <div class="alert alert-danger">@errorMessage</div>
-}
 
 <div class="justify-content-between flex">
     <h2 class="mb-6 text-2xl font-bold">
@@ -46,7 +42,8 @@
     </div>
 
     <div>
-        <button class="p-2 rounded-md bg-[#00B2B2]" @onclick="() => FilterDebts()">Filter</button>
+        <button class="p-2 rounded-md bg-[#00B2B2]" @onclick="FilterDebts">Filter</button>
+        <button class="p-2 rounded-md bg-[#00B2B2]" @onclick="ClearFilters">Clear Filters</button>
     </div>
 </div>
 
@@ -214,10 +211,6 @@ else
                 </div>
 
                 <div class="modal-body">
-                    @if (!string.IsNullOrWhiteSpace(modalErrorMessage))
-                    {
-                        <div class="alert alert-danger">@modalErrorMessage</div>
-                    }
                     <div class="mb-3">
                         <label for="debtSource" class="form-label">Source:</label>
                         <input id="debtSource" @bind="newDebt.Source" class="form-control" />
@@ -292,9 +285,6 @@ else
     private string modalTitle = "Add New Debt";
     private string modalButtonText = "Add Debt";
 
-    private string? errorMessage;
-    private string? modalErrorMessage;
-
     protected override async Task OnInitializedAsync()
     {
         PageTitleService.PageTitle = "Debt Overview";
@@ -307,6 +297,9 @@ else
             userName = loggedInUser.UserName;
             userBalance = loggedInUser.Balance;
             userCurrency = loggedInUser.CurrencyCode;
+            var currentDate = DateTime.Now;
+            startDateFilter = new DateTime(currentDate.Year, currentDate.Month, 1);
+            endDateFilter = startDateFilter.Value.AddMonths(1).AddDays(-1);
 
             AllDebts = await DebtService.LoadAllDebtsAsync();
             FilterDebts();
@@ -317,6 +310,14 @@ else
         }
 
     }
+
+    private void ClearFilters()
+    {
+        startDateFilter = null;
+        endDateFilter = null;
+        FilterDebts();
+    }
+
 
     private void FilterDebts()
     {
@@ -402,13 +403,12 @@ else
     {
         newDebt = new Debts();
         isEditing = false;
-        errorMessage = null;
     }
     private bool ValidateDebt()
     {
         if (string.IsNullOrWhiteSpace(newDebt.Source) || newDebt.Amount <= 0)
         {
-            modalErrorMessage = "Source and Amount must be provided, and Amount must be greater than zero.";
+            ToastService.ShowError("Source and Amount must be provided, and Amount must be greater than zero.");
             return false;
         }
 
@@ -454,7 +454,7 @@ else
             }
             catch (Exception ex)
             {
-                modalErrorMessage = $"Error saving debt: {ex.Message}";
+                ToastService.ShowError($"Error saving debt: {ex.Message}");
             }
         }
     }
@@ -582,7 +582,7 @@ else
             }
             catch (Exception ex)
             {
-                errorMessage = $"Error deleting debt: {ex.Message}";
+                ToastService.ShowError($"Error deleting debt: {ex.Message}");
             }
         }
     }
