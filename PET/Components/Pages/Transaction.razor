@@ -21,264 +21,283 @@
 @inject NavigationManager Navigation
 @inject IToastService ToastService
 
-<div class="justify-content-between flex">
-    <h2 class="mb-6 text-2xl font-bold">
-        Available Balance: @userCurrency @userBalance
-    </h2>
-    @* Add Transaction Button *@
-    <div class="mb-3">
-        <button class="btn btn-primary" @onclick="() => OpenModal()">Add Transaction</button>
-    </div>
-    <div class="mb-3">
-        <button class="btn btn-primary" @onclick="SaveToExcel">Save to Excel</button>
-    </div>
-</div>
+<body class="space-y-6">
+    <div class="justify-content-between flex items-center">
+        <h2 class="text-2xl font-bold">
+            Available Balance: @userCurrency @userBalance
+        </h2>
+        @* Add Transaction Button *@
+        <div class="space-x-2">
+            <button class="p-1.5 text-white w-36 rounded-md bg-[#006B6B] shadow-md" @onclick="() => OpenModal()">Add Transaction</button>
 
-@* Filter Controls *@
-<div class="mb-6 justify-content-between flex items-center">
-    @* Transaction Type Filter *@
-    <div>
-        <select id="transactionTypeFilter" @bind="transactionTypeFilter" class="form-control" placeholder="Type">
+        </div>
+    </div>
+
+    @* Filter Controls *@
+    <div class="mb-6 justify-content-between flex items-center">
+        @* Search Input Field *@
+        <input id="searchTransactions" type="text" placeholder="Search"
+               class="w-64 border-gray-500 p-1.5 text-gray-800 rounded-2 placeholder-black rounded-md border focus:outline-[#006B6B]" @bind="searchQuery" @oninput="OnSearchInputChanged" />
+
+        @* Transaction Type Filter *@
+        <select id="transactionTypeFilter" @bind="transactionTypeFilter" class="w-36 border-gray-500 p-2 text-gray-800 rounded-2 rounded-md border focus:outline-[#006B6B]" placeholder="Type">
             <option value="">All Types</option>
             <option value="Debit">Debit</option>
             <option value="Credit">Credit</option>
         </select>
-    </div>
 
-    @* Tag Filter *@
-    <div>
-        <input id="tagFilter" type="text" @bind="tagFilter" class="form-control" list="tagList" placeholder="Tags" />
+        @* Tag Filter *@
+        <input id="tagFilter" type="text" @bind="tagFilter" class="w-36 border-gray-500 p-1.5 text-gray-800 rounded-2 placeholder-black rounded-md border focus:outline-[#006B6B]" list="tagList" placeholder="Tags" />
         <datalist id="tagList">
             @foreach (var tag in AllTags)
             {
                 <option value="@tag.Name" />
             }
         </datalist>
-    </div>
 
-    @* Date Range Filter *@
-    <div class="flex items-center">
-        <input id="startDateFilter" type="date" @bind="startDateFilter" class="form-control" />
-        <span class="mx-1">to</span>
-        <input id="endDateFilter" type="date" @bind="endDateFilter" class="form-control" />
-    </div>
-
-    <div>
-        <button class="p-2 rounded-md bg-[#00B2B2]" @onclick="FilterTransactions">Filter</button>
-        <button class="p-2 rounded-md bg-[#00B2B2]" @onclick="ClearFilters">Clear Filters</button>
-    </div>
-</div>
-
-@* Search Input Field *@
-<div class="mb-3">
-    <input id="searchTransactions" type="text" placeholder="Search"
-    class="border-gray-300 p-lg-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-    @bind="searchQuery" @oninput="OnSearchInputChanged" />
-</div>
-
-<div class="mb-6 gap-6 grid grid-cols-1 md:grid-cols-3">
-    @* Total Inflow *@
-    <div class="bg-green-100 p-4 rounded shadow">
-        <div class="align-center flex w-full justify-between">
-            <p class="text-sm">Total Inflow</p>
-            <p class="text-sm">@InflowNum</p>
+        @* Date Range Filter *@
+        <div class="flex items-center">
+            <span class="mx-1">From</span>
+            <input id="startDateFilter" type="date" @bind="startDateFilter" class="py-1 px-2 border-1 border-gray-300 rounded-2 focus:outline-[#006B6B]" />
+            <span class="mx-2">to</span>
+            <input id="endDateFilter" type="date" @bind="endDateFilter" class="py-1 px-2 border-1 border-gray-300 rounded-2 focus:outline-[#006B6B]" />
         </div>
-        <p class="text-lg font-semibold">
-            @if (!FilteredTransactions.Any())
-            {
-                <span>@userCurrency 0.00</span>
-            }
-            else
-            {
-                <span>@userCurrency @TotalInflow</span>
-            }
-        </p>
-    </div>
 
-    @* Total Outflow *@
-    <div class="bg-red-100 p-4 rounded shadow">
-        <div class="align-center flex w-full justify-between">
-            <p class="text-sm">Total Outflow</p>
-            <p class="text-sm">@OutflowNum</p>
+        <div class="space-x-2">
+             <button class="p-1.5 text-white w-28 rounded-md bg-[#006B6B] shadow-md" @onclick="FilterTransactions">Set Filter</button>
+            <button class="p-1.5 text-white w-28 bg-red-500 rounded-md shadow-md" @onclick="ClearFilters">Clear Filters</button>
         </div>
-        <p class="text-lg font-semibold">
-            @if (!FilteredTransactions.Any())
-            {
-                <span>@userCurrency 0.00</span>
-            }
-            else
-            {
-                <span>@userCurrency @TotalOutflow</span>
-            }
-        </p>
     </div>
 
-    @* Net Balance *@
-    <div class="bg-blue-100 p-4 rounded shadow">
-        <div class="align-center flex w-full justify-between">
-            <p class="text-sm">Total Transaction</p>
-            <p class="text-sm">@TotalTransNum</p>
-        </div>
-        <p class="text-lg font-semibold">
-            @if (!FilteredTransactions.Any())
-            {
-                <span>@userCurrency 0.00</span>
-            }
-            else
-            {
-                <span>@userCurrency @TotalTransaction</span>
-            }
-        </p>
-    </div>
-</div>
 
-@* Transactions Table *@
-@if (FilteredTransactions == null || FilteredTransactions.Count == 0)
-{
-    <p>No transactions available.</p>
-}
-else
-{
-    <div class="bg-white p-8 rounded-lg border-2 border-[#00B2B2] shadow-sm">
-        <table class="min-w-full table-auto">
-            <thead>
-                <tr class="border-black px-4 py-2 border-b-2 text-center">
-                    <th>Title</th>
-                    <th>Amount</th>
-                    <th>Date</th>
-                    <th>Transaction Type</th>
-                    <th>Payment Method</th>
-                    <th>Tags</th>
-                    <th>Notes</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var transaction in FilteredTransactions)
+
+    <div class="gap-4 grid grid-cols-1 md:grid-cols-3">
+        @* Total Inflow *@
+        <div class="bg-green-200 p-4 space-y-1 rounded shadow">
+            <div class="align-center text-md flex w-full justify-between">
+                <span>Total Inflow</span>
+                <span>@InflowNum</span>
+            </div>
+            <p class="text-xl font-semibold">
+                @if (!FilteredTransactions.Any())
                 {
-                    <tr class="px-4 py-2 border-b text-center">
-                        <td class="px-4 py-2">@transaction.Title</td>
-                        <td class="px-4 py-2">@userCurrency @transaction.Amount</td>
-                        <td class="px-4 py-2">@transaction.Date.ToShortDateString()</td>
-                        <td class="px-4 py-2">@transaction.TransactionType</td>
-                        <td class="px-4 py-2">@transaction.PaymentMethod</td>
-                        <td class="px-4 py-2">@string.Join(", ", transaction.TagName)</td>
-                        <td class="px-4 py-2">@(transaction.Notes == null ? "-" : transaction.Notes)</td>
-                        <td class="align-center justify-content-center space-x-2 px-4 py-2 flex">
-                            <button @onclick="() => OpenModal(transaction)">
-                                <img src="Images/edit.svg" alt="edit" class="h-5" />
-                            </button>
-                            <button @onclick="() => DeleteTransaction(transaction)"><img src="Images/delete.svg" alt="delete" class="h-5" /></button>
-                        </td>
-                    </tr>
+                    <span>@userCurrency 0.00</span>
                 }
-            </tbody>
-        </table>
-    </div>
-}
+                else
+                {
+                <p>@userCurrency @TotalInflow</p>
+                <p class="text-gray-600 text-sm font-medium">@(InflowPercentageChange.StartsWith("-") ? InflowPercentageChange : "+" + InflowPercentageChange)% from last month</p>
+                }
+            </p>
+        </div>
 
-@if (isDeleteConfirmationVisible)
-{
-    <div class="inset-0 bg-gray-900 fixed z-50 flex items-center justify-center bg-opacity-50">
-        <div class="bg-white p-6 w-full max-w-sm rounded-md shadow-lg">
-            <h3 class="text-gray-800 text-xl font-semibold">Are you sure you want to delete this transaction?</h3>
-            <div class="mt-4">
-                <button class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-700" @onclick="ConfirmDelete">
-                    Yes, Delete
-                </button>
-                <button class="px-4 py-2 ml-3 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-500" @onclick="CancelDelete">
-                    Cancel
-                </button>
+        @* Total Outflow *@
+        <div class="bg-red-200 p-4 space-y-1 rounded shadow">
+            <div class="align-center text-md flex w-full justify-between">
+                <span>Total Outflow</span>
+                <span>@OutflowNum</span>
             </div>
+            <p class="text-xl font-semibold">
+                @if (!FilteredTransactions.Any())
+                {
+                    <span>@userCurrency 0.00</span>
+                }
+                else
+                {
+                <p>@userCurrency @TotalOutflow</p>
+                <p class="text-gray-600 text-sm font-medium">@(OutflowPercentageChange.StartsWith("-") ? OutflowPercentageChange : "+" + OutflowPercentageChange)% from last month</p>
+                }
+            </p>
+        </div>
+
+        @* Total transactions *@
+        <div class="bg-blue-200 p-4 space-y-1 rounded shadow">
+            <div class="align-center text-md flex w-full justify-between">
+                <span>Total Transaction</span>
+                <span>@TotalTransNum</span>
+            </div>
+            <p class="text-xl font-semibold">
+                @if (!FilteredTransactions.Any())
+                {
+                    <span>@userCurrency 0.00</span>
+                }
+                else
+                {
+                <p>@userCurrency @TotalTransaction</p>
+                <p class="text-gray-600 text-sm font-medium">@(TransactionPercentageChange.StartsWith("-") ? TransactionPercentageChange : "+" + TransactionPercentageChange)% from last month</p>
+                }
+            </p>
         </div>
     </div>
-}
 
-@* Modal *@
-@if (isModalVisible)
-{
-    <div class="modal d-block" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">@modalTitle</h5>
-                    <button type="button" class="btn-close" @onclick="CloseModal" aria-label="Close"></button>
-                </div>
+    @* Transactions Table *@
+    @if (FilteredTransactions == null || FilteredTransactions.Count == 0)
+    {
+        <p>No transactions available.</p>
+    }
+    else
+    {
+        <div class="bg-white p-6 max-h-[28rem] overflow-y-hidden rounded-lg border-2 border-[#00B2B2] shadow-sm">
+            <div class="mb-3 flex items-center justify-between">
+                <p class="text-xl font-semibold">All Transactions</p>
 
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="transactionTitle" class="form-label">Title:</label>
-                        <input id="transactionTitle" @bind="newTransaction.Title" class="form-control" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="transactionAmount" class="form-label">Amount:</label>
-                        <input id="transactionAmount" @bind="newTransaction.Amount" type="number" class="form-control" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="transactionDate" class="form-label">Date:</label>
-                        <input id="transactionDate" @bind="newTransaction.Date" type="date" class="form-control" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="transactionType" class="form-label">Transaction Type:</label>
-                        <select id="transactionType" @bind="newTransaction.TransactionType" class="form-control">
-                            <option value=""> -- Select -- </option>
-                            <option value="Debit">Debit</option>
-                            <option value="Credit">Credit</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="paymentMethod" class="form-label">Payment Method:</label>
-                        <select id="paymentMethod" @bind="newTransaction.PaymentMethod" class="form-control">
-                            <option value=""> -- Select -- </option>
-                            <option value="Cash">Cash</option>
-                            <option value="Card">Card</option>
-                            <option value="BankTransfer">Bank Transfer</option>
-                            <option value="MobilePayment">Mobile Payment</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="Tags" class="text-gray-700 block text-lg font-medium">Tags:</label>
-                        <input id="Tags" type="text" @bind="newTransaction.TagName" list="tagList" class="border-gray-300 p-lg-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" @oninput="OnTagInputChanged" />
-
-                        @* The datalist element will show available tags as suggestions *@
-                        <datalist id="tagList">
-                            @foreach (var tag in filteredTags)
-                            {
-                                <option value="@tag.Name" />
-                            }
-                        </datalist>
-                    </div>
-
-
-                    <div class="mb-3">
-                        <label for="transactionNotes" class="form-label">Notes:</label>
-                        <textarea id="transactionNotes" @bind="newTransaction.Notes" class="form-control"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
-                    <button type="button" class="btn btn-success" @onclick="AddOrUpdateTransaction">@modalButtonText</button>
-                </div>
-
+                <button class="p-1.5 text-white w-36 rounded-md bg-[#006B6B] shadow-md" @onclick="SaveToExcel">
+                    Save to Excel
+                </button>
+            </div>
+            <div class="scrollbar-hide max-h-[20rem] overflow-y-scroll">
+            <table class="mt-2 table w-full">
+                <thead>
+                    <tr class="border-black px-4 py-2 border-b-2 text-center">
+                        <th>Title</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Transaction Type</th>
+                        <th>Payment Method</th>
+                        <th>Tags</th>
+                        <th>Notes</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody >
+                    @foreach (var transaction in FilteredTransactions)
+                    {
+                        <tr class="items-center border-b text-center">
+                            <td class="max-w-24 truncate">@transaction.Title</td>
+                            <td class="max-w-24 truncate">@userCurrency @transaction.Amount</td>
+                            <td class="max-w-24 truncate">@transaction.Date.ToShortDateString()</td>
+                            <td class="max-w-24 truncate">@transaction.TransactionType</td>
+                            <td class="max-w-24 truncate">@transaction.PaymentMethod</td>
+                            <td class="max-w-24 truncate">@string.Join(", ", transaction.TagName)</td>
+                            <td class="max-w-24 truncate">@(transaction.Notes == null ? "-" : transaction.Notes)</td>
+                            <td>
+                                <div class="space-x-2 flex items-center justify-center">
+                                    <button @onclick="() => OpenModal(transaction)">
+                                        <img src="Images/edit.svg" alt="edit" class="h-5" />
+                                    </button>
+                                    <button @onclick="() => DeleteTransaction(transaction)">
+                                        <img src="Images/delete.svg" alt="delete" class="h-5" />
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
             </div>
         </div>
-    </div>
-}
+    }
 
+    @if (isDeleteConfirmationVisible)
+    {
+        <div class="inset-0 bg-gray-700 fixed z-50 flex items-center justify-center bg-opacity-40">
+            <div class="bg-white p-6 w-full max-w-max rounded-md shadow-lg">
+                <p class="text-gray-800 text-lg font-semibold">Are you sure you want to delete this transaction?</p>
+                <div class="mt-4 justify-content-center spacy-y-2 flex items-center">
+                    <button class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-700" @onclick="ConfirmDelete">
+                        Delete
+                    </button>
+                    <button class="px-4 py-2 ml-3 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-500" @onclick="CancelDelete">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* Modal *@
+    @if (isModalVisible)
+    {
+        <div class="modal d-block" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header py-3">
+                        <h5 class="modal-title font-bold">@modalTitle</h5>
+                        <button type="button" class="btn-close" @onclick="CloseModal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body space-y-2">
+                        <div >
+                            <label for="transactionTitle" class="form-label">Title:</label>
+                            <input id="transactionTitle" @bind="newTransaction.Title" class="form-control" />
+                        </div>
+                        <div >
+                            <label for="transactionAmount" class="form-label">Amount:</label>
+                            <input id="transactionAmount" @bind="newTransaction.Amount" type="number" class="form-control" />
+                        </div>
+                        <div >
+                            <label for="transactionDate" class="form-label">Date:</label>
+                            <input id="transactionDate" @bind="newTransaction.Date" type="date" class="form-control" />
+                        </div>
+                        <div >
+                            <label for="transactionType" class="form-label">Transaction Type:</label>
+                            <select id="transactionType" @bind="newTransaction.TransactionType" class="form-control">
+                                <option value=""> -- Select -- </option>
+                                <option value="Debit">Debit</option>
+                                <option value="Credit">Credit</option>
+                            </select>
+                        </div>
+                        <div >
+                            <label for="paymentMethod" class="form-label">Payment Method:</label>
+                            <select id="paymentMethod" @bind="newTransaction.PaymentMethod" class="form-control">
+                                <option value=""> -- Select -- </option>
+                                <option value="Cash">Cash</option>
+                                <option value="Card">Card</option>
+                                <option value="BankTransfer">Bank Transfer</option>
+                                <option value="MobilePayment">Mobile Payment</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div >
+                            <label for="Tags" class="text-gray-700 block text-lg font-medium">Tags:</label>
+                            <input id="Tags" type="text" @bind="newTransaction.TagName" list="tagList" class="border-gray-300 p-lg-2 text-gray-800 w-full rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" @oninput="OnTagInputChanged" />
+
+                            @* The datalist element will show available tags as suggestions *@
+                            <datalist id="tagList">
+                                @foreach (var tag in filteredTags)
+                                {
+                                    <option value="@tag.Name" />
+                                }
+                            </datalist>
+                        </div>
+
+
+                        <div >
+                            <label for="transactionNotes" class="form-label">Notes:</label>
+                            <textarea id="transactionNotes" @bind="newTransaction.Notes" class="form-control"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
+                        <button type="button" class="btn btn-success" @onclick="AddOrUpdateTransaction">@modalButtonText</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    }
+</body>
 
 @code {
     string userName = string.Empty;
     string userCurrency = string.Empty;
     double userBalance = 0.00;
 
-    private double TotalInflow { get; set; }
-    private double TotalOutflow { get; set; }
-    private double TotalTransaction => TotalInflow + TotalOutflow;
+    double TotalInflow = 0.00;
+    double TotalOutflow = 0.00;
+    double TotalTransaction => TotalInflow + TotalOutflow;
 
-    private int InflowNum = 0;
-    private int OutflowNum = 0;
-    private int TotalTransNum = 0;
+    double PreviousMonthInflow = 0.00;
+    double PreviousMonthOutflow = 0.00;
+    double PreviousMonthTransaction = 0.00;
+
+    int InflowNum = 0;
+    int OutflowNum = 0;
+    int TotalTransNum = 0;
+
+    String InflowPercentageChange = "0";
+    String OutflowPercentageChange = "0";
+    String TransactionPercentageChange = "0";
 
     private string LoggedInUserName { get; set; }
 
@@ -378,6 +397,88 @@ else
             .OrderBy(t => t.Date)
             .ToList();
         UpdateTotals();
+
+        // Calculate totals for the previous month
+        if (startDateFilter.HasValue)
+        {
+            var previousMonthStart = startDateFilter.Value.AddMonths(-1);
+            var previousMonthEnd = previousMonthStart.AddMonths(1).AddDays(-1);
+
+            var previousMonthTransactions = AllTransactions
+                .Where(t => t.UserName == userName && t.Date >= previousMonthStart && t.Date <= previousMonthEnd)
+                .ToList();
+
+            if (previousMonthTransactions != null && previousMonthTransactions.Any())
+            {
+                PreviousMonthInflow = previousMonthTransactions
+                    .Where(t => t.TransactionType == "Credit")
+                    .Sum(t => t.Amount);
+
+                PreviousMonthOutflow = previousMonthTransactions
+                    .Where(t => t.TransactionType == "Debit")
+                    .Sum(t => t.Amount);
+
+                PreviousMonthTransaction = PreviousMonthInflow + PreviousMonthOutflow;
+
+                CalculatePercentageChanges();
+            }
+        }
+        else
+        {
+            PreviousMonthInflow = 0;
+            PreviousMonthOutflow = 0;
+            PreviousMonthTransaction = 0;
+            InflowPercentageChange = "0";
+            OutflowPercentageChange = "0";
+            TransactionPercentageChange = "0";
+        }
+
+    }
+
+    private void CalculatePercentageChanges()
+    {
+        if (PreviousMonthInflow == 0.00)
+        {
+            InflowPercentageChange = "0";
+        }
+        else
+        {
+            InflowPercentageChange = Math.Round((((TotalInflow - PreviousMonthInflow) / PreviousMonthInflow) * 100), 2).ToString();
+        }
+
+        if (PreviousMonthOutflow == 0.00)
+        {
+            OutflowPercentageChange = "0";
+        }
+        else
+        {
+            OutflowPercentageChange = Math.Round((((TotalOutflow - PreviousMonthOutflow) / PreviousMonthOutflow) * 100), 2).ToString();
+        }
+
+        if (PreviousMonthTransaction == 0.00)
+        {
+            TransactionPercentageChange = "0";
+        }
+        else
+        {
+            TransactionPercentageChange = Math.Round((((TotalTransaction - PreviousMonthTransaction) / PreviousMonthTransaction) * 100), 2).ToString();
+        }
+    }
+
+
+    private void UpdateTotals()
+    {
+        TotalInflow = FilteredTransactions
+            .Where(t => t.TransactionType == "Credit")
+            .Sum(t => t.Amount);
+
+        TotalOutflow = FilteredTransactions
+            .Where(t => t.TransactionType == "Debit")
+            .Sum(t => t.Amount);
+
+        InflowNum = FilteredTransactions.Where(t => t.TransactionType == "Credit").Count();
+        OutflowNum = FilteredTransactions.Where(t => t.TransactionType == "Debit").Count();
+        TotalTransNum = FilteredTransactions.Count();
     }
 
     private async Task SaveToExcel()
@@ -422,21 +523,6 @@ else
         {
             ToastService.ShowError($"Error saving to Excel: {ex.Message}");
         }
-    }
-
-    private void UpdateTotals()
-    {
-        TotalInflow = FilteredTransactions
-            .Where(t => t.TransactionType == "Credit")
-            .Sum(t => t.Amount);
-
-        TotalOutflow = FilteredTransactions
-            .Where(t => t.TransactionType == "Debit")
-            .Sum(t => t.Amount);
-
-        InflowNum = FilteredTransactions.Where(t => t.TransactionType == "Credit").Count();
-        OutflowNum = FilteredTransactions.Where(t => t.TransactionType == "Debit").Count();
-        TotalTransNum = FilteredTransactions.Count();
     }
 
     private void OnSearchInputChanged(ChangeEventArgs e)
@@ -628,7 +714,7 @@ else
             newTransaction.Tags = selectedTag;
         }
     }
-    
+
     private void DeleteTransaction(Transactions transaction)
     {
         transactionToDelete = transaction;

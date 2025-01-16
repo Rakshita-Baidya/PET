@@ -16,147 +16,159 @@
 @inject PageTitleService PageTitleService
 @inject IDebt DebtService
 @inject IUser UserService
+@inject ITransaction TransactionService
 
 @inject NavigationManager Navigation
 @inject IToastService ToastService
 
-<div class="justify-content-between flex">
-    <h2 class="mb-6 text-2xl font-bold">
-        Available Balance: @userCurrency @userBalance
-    </h2>
-    @* Add Debt Button *@
-    <div class="mb-3">
-        <button class="btn btn-primary" @onclick="() => OpenModal()">Add Debt</button>
-    </div>
-    @* export to excel *@
-    <button class="p-2 text-white rounded-md bg-[#00B2B2]" @onclick="SaveToExcel">
-        Export to Excel 
-    </button>
+<body class="space-y-6">
+    <div class="justify-content-between flex items-center">
+        <h2 class="text-2xl font-bold">
+            Available Balance: @userCurrency @userBalance
+        </h2>
+        <div class="space-x-2">
+            <button class="p-1.5 text-white w-36 rounded-md bg-[#006B6B] shadow-md" @onclick="() => OpenModal()">Add Debt</button>
+        </div>
 
-</div>
 
-@* Filter Controls *@
-<div class="mb-6 justify-content-between flex items-center">
-    @* Date Range Filter *@
-    <div class="flex items-center">
-        <input id="startDateFilter" type="date" @bind="startDateFilter" class="form-control" />
-        <span class="mx-1">to</span>
-        <input id="endDateFilter" type="date" @bind="endDateFilter" class="form-control" />
     </div>
 
-    <div class="mb-3">
+    @* Filter Controls *@
+    <div class="mb-6 justify-content-end space-x-3 flex items-center">
+
+        @* Search Input Field *@
         <input id="searchDebts" type="text" placeholder="Search"
-        class="border-gray-300 p-lg-2 text-gray-800 w-full rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        @bind="searchQuery" @oninput="OnSearchInputChanged" />
-    </div>
+        class="w-54 border-gray-500 p-1.5 text-gray-800 rounded-2 placeholder-black rounded-md border focus:outline-[#006B6B]" @bind="searchQuery" @oninput="OnSearchInputChanged" />
 
-    <div>
-        <button class="p-2 rounded-md bg-[#00B2B2]" @onclick="FilterDebts">Filter</button>
-        <button class="p-2 rounded-md bg-[#00B2B2]" @onclick="ClearFilters">Clear Filters</button>
-    </div>
-</div>
-
-<div class="mb-6 gap-6 grid grid-cols-1 md:grid-cols-3">
-    @* Total Debt *@
-    <div class="bg-green-100 p-4 rounded shadow">
-        <div class="align-center flex w-full justify-between">
-            <p class="text-sm">Total Debts</p>
-            <p class="text-sm">@DebtsNumb</p>
+        @* Date Range Filter *@
+        <div class="flex items-center">
+            <span class="mx-1">From</span>
+            <input id="startDateFilter" type="date" @bind="startDateFilter" class="py-1 px-2 border-1 border-gray-300 rounded-2 focus:outline-[#006B6B]" />
+            <span class="mx-2">to</span>
+            <input id="endDateFilter" type="date" @bind="endDateFilter" class="py-1 px-2 border-1 border-gray-300 rounded-2 focus:outline-[#006B6B]" />
         </div>
-        <p class="text-lg font-semibold">
-            @if (!FilteredDebts.Any())
-            {
-                <span>@userCurrency 0.00</span>
-            }
-            else
-            {
-                <span>@userCurrency @OverallDebts</span>
-            }
-        </p>
-    </div>
 
-    @* Debt Cleared *@
-    <div class="bg-red-100 p-4 rounded shadow">
-        <div class="align-center flex w-full justify-between">
-            <p class="text-sm">Debt Cleared</p>
-            <p class="text-sm">@ClearedDebtsNumb</p>
+        <div class="space-x-2">
+            <button class="p-1.5 text-white w-28 rounded-md bg-[#006B6B] shadow-md" @onclick="FilterDebts">Set Filter</button>
+            <button class="p-1.5 text-white w-28 bg-red-500 rounded-md shadow-md" @onclick="ClearFilters">Clear Filters</button>
         </div>
-        <p class="text-lg font-semibold">
-            @if (!FilteredDebts.Any())
-            {
-                <span>@userCurrency 0.00</span>
-            }
-            else
-            {
-                <span>@userCurrency @OverallCleared</span>
-            }
-        </p>
     </div>
 
-    @* Total Debt Remaining *@
-    <div class="bg-blue-100 p-4 rounded shadow">
-        <div class="align-center flex w-full justify-between">
-            <p class="text-sm">Total Debt Remaining</p>
-            <p class="text-sm">@RemainingDebtsNumb</p>
-        </div>
-        <p class="text-lg font-semibold">
-            @if (!FilteredDebts.Any())
-            {
-                <span>@userCurrency 0.00</span>
-            }
-            else
-            {
-                <span>@userCurrency @OverallRemaining</span>
-            }
-        </p>
-    </div>
-</div>
-
-@* Debts Table *@
-@if (FilteredDebts == null || FilteredDebts.Count == 0)
-{
-    <p>No debts available.</p>
-}
-else
-{
-    <div class="bg-white p-8 rounded-lg border-2 border-[#00B2B2] shadow-sm">
-        <table class="min-w-full table-auto">
-            <thead>
-                <tr class="border-black px-4 py-2 border-b-2 text-center">
-                    <th>Source</th>
-                    <th>Amount</th>
-                    <th>Taken Date</th>
-                    <th>Interest Rate</th>
-                    <th>Due Date</th>
-                    <th>Status</th>
-                    <th>Notes</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var debt in FilteredDebts)
+    <div class="gap-4 grid grid-cols-1 md:grid-cols-3">
+        @* Total Debt *@
+        <div class="bg-green-200 p-4 space-y-1 rounded shadow">
+            <div class="align-center text-md flex w-full justify-between">
+                <span>Total Debt</span>
+                <span>@DebtsNumb</span>
+            </div>
+            <p class="text-xl font-semibold">
+                @if (!FilteredDebts.Any())
                 {
-                    <tr class="px-4 py-2 border-b text-center">
-                        <td class="px-4 py-2">@debt.Source</td>
-                        <td class="px-4 py-2">@userCurrency @debt.Amount</td>
-                        <td class="px-4 py-2">@debt.Taken_Date.ToShortDateString()</td>
-                        <td class="px-4 py-2">@(debt.Interest_Rate == null ? "0" : debt.Interest_Rate)</td>
-                        <td class="px-4 py-2">@debt.Due_Date.ToShortDateString()</td>
-                        <td class="px-4 py-2">@(debt.Is_Cleared ? "Cleared" : "Pending")</td>
-                        <td class="px-4 py-2">@(debt.Notes == null ? "-" : debt.Notes)</td>
-                        <td class="align-center justify-content-center space-x-2 px-4 py-2 flex">
-                            <button class="@(debt.Is_Cleared ? "bg-green-500" : "bg-red-500") btn btn-sm" @onclick="() => ClearDebt(debt)" />
-                            <button @onclick="() => OpenModal(debt)" disabled="@(debt.Is_Cleared)">
-                                <img src="Images/edit.svg" alt="edit" class="w-5" />
-                            </button>
-                            <button @onclick="() => DeleteDebt(debt)"><img src="Images/delete.svg" alt="delete" class="w-5" /></button>
-                        </td>
-                    </tr>
+                    <span>@userCurrency 0.00</span>
                 }
-            </tbody>
-        </table>
+                else
+                {
+                    <p>@userCurrency @OverallDebts</p>
+                    <p class="text-gray-600 text-sm font-medium">@(DebtPercentageChange.StartsWith("-") ? DebtPercentageChange : "+" + DebtPercentageChange)% from last month</p>
+                }
+            </p>
+        </div>
+
+        @* Debt Cleared *@
+        <div class="bg-red-200 p-4 space-y-1 rounded shadow">
+            <div class="align-center text-md flex w-full justify-between">
+                <p class="text-sm">Debt Cleared</p>
+                <p class="text-sm">@ClearedDebtsNumb</p>
+            </div>
+            <p class="text-lg font-semibold">
+                @if (!FilteredDebts.Any())
+                {
+                    <span>@userCurrency 0.00</span>
+                }
+                else
+                {
+                    <p>@userCurrency @OverallCleared</p>
+                    <p class="text-gray-600 text-sm font-medium">@(ClearedPercentageChange.StartsWith("-") ? ClearedPercentageChange : "+" + ClearedPercentageChange)% from last month</p>
+                }
+            </p>
+        </div>
+
+        @* Total Debt Remaining *@
+        <div class="bg-blue-200 p-4 space-y-1 rounded shadow">
+            <div class="align-center text-md flex w-full justify-between">
+                <p class="text-sm">Total Debt Remaining</p>
+                <p class="text-sm">@RemainingDebtsNumb</p>
+            </div>
+            <p class="text-lg font-semibold">
+                @if (!FilteredDebts.Any())
+                {
+                    <span>@userCurrency 0.00</span>
+                }
+                else
+                {
+                    <p>@userCurrency @OverallRemaining</p>
+                    <p class="text-gray-600 text-sm font-medium">@(RemainingPercentageChange.StartsWith("-") ? RemainingPercentageChange : "+" + RemainingPercentageChange)% from last month</p>
+                }
+            </p>
+        </div>
     </div>
-}
+
+    @* Debts Table *@
+    @if (FilteredDebts == null || FilteredDebts.Count == 0)
+    {
+        <p>No debts available.</p>
+    }
+    else
+    {
+        <div class="bg-white p-6 max-h-[28rem] overflow-y-hidden rounded-lg border-2 border-[#00B2B2] shadow-sm">
+            <div class="mb-3 flex items-center justify-between">
+                <p class="text-xl font-semibold">All Debts</p>
+                <button class="p-1.5 text-white w-36 rounded-md bg-[#006B6B] shadow-md" @onclick="SaveToExcel">
+                    Export to Excel
+                </button>
+            </div>
+            <div class="scrollbar-hide max-h-[20rem] overflow-y-scroll">
+                <table class="mt-2 table w-full">
+                    <thead>
+                        <tr class="border-black px-4 py-2 border-b-2 text-center">
+                            <th>Source</th>
+                            <th>Amount</th>
+                            <th>Taken Date</th>
+                            <th>Interest Rate</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var debt in FilteredDebts)
+                        {
+                            <tr class="items-center border-b text-center">
+                                <td class="max-w-24 truncate">@debt.Source</td>
+                                <td class="max-w-24 truncate">@userCurrency @debt.Amount</td>
+                                <td class="max-w-24 truncate">@debt.Taken_Date.ToShortDateString()</td>
+                                <td class="max-w-24 truncate">@(debt.Interest_Rate == null ? "0" : debt.Interest_Rate)</td>
+                                <td class="max-w-24 truncate">@debt.Due_Date.ToShortDateString()</td>
+                                <td class="max-w-24 truncate">@(debt.Is_Cleared ? "Cleared" : "Pending")</td>
+                                <td class="max-w-24 truncate">@(debt.Notes == null ? "-" : debt.Notes)</td>
+                                <td>
+                                    <div class="space-x-2 flex items-center justify-center">
+                                        <button class="@(debt.Is_Cleared ? "bg-green-500" : "bg-red-500") w-4 h-4 rounded-1 focus:outline-[#006B6B]" @onclick="() => ClearDebt(debt)" />
+                                        <button @onclick="() => OpenModal(debt)" disabled="@(debt.Is_Cleared)">
+                                            <img src="Images/edit.svg" alt="edit" class="h-5" />
+                                        </button>
+                                        <button @onclick="() => DeleteDebt(debt)"><img src="Images/delete.svg" alt="delete" class="h-5" /></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</body>
 
 @if (isClearConfirmationVisible)
 {
@@ -169,8 +181,8 @@ else
                 <p class="text-gray-600">
                     Your debt of <span class="font-bold">@userCurrency @debtToClear.Amount</span>, with an interest rate of
                     <span class="font-bold">@debtToClear.Interest_Rate %</span>, has accumulated an interest of
-                    <span class="font-bold">@userCurrency @interest</span>, totaling
-                    <span class="font-bold">@userCurrency @clearingAmount</span>.
+                    <span class="font-bold">@userCurrency @debtToClear.Interest_Amount</span>, totaling
+                    <span class="font-bold">@userCurrency @(debtToClear.Amount + debtToClear.Interest_Amount)</span>.
                 </p>
                 <p class="mt-2 text-gray-500 text-sm">
                     @(debtToClear.Is_Cleared ? "This will revert the debt clearance." : "This amount will be deducted from your balance.")
@@ -190,14 +202,15 @@ else
 
 
 
+
 @if (isDeleteConfirmationVisible)
 {
-    <div class="inset-0 bg-gray-900 fixed z-50 flex items-center justify-center bg-opacity-50">
-        <div class="bg-white p-6 w-full max-w-sm rounded-md shadow-lg">
-            <h3 class="text-gray-800 text-xl font-semibold">Are you sure you want to delete this debt?</h3>
-            <div class="mt-4 flex-column items-center">
+    <div class="inset-0 bg-gray-700 fixed z-50 flex items-center justify-center bg-opacity-40">
+        <div class="bg-white p-6 w-full max-w-max rounded-md shadow-lg">
+            <p class="text-gray-800 text-lg font-semibold">Are you sure you want to delete this debt?</p>
+            <div class="mt-4 justify-content-center spacy-y-2 flex items-center">
                 <button class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-700" @onclick="ConfirmDelete">
-                    Yes, Delete
+                    Delete
                 </button>
                 <button class="px-4 py-2 ml-3 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-500" @onclick="CancelDelete">
                     Cancel
@@ -264,19 +277,30 @@ else
     double clearingAmount = 0.00;
     double interest = 0.00;
 
-    private double OverallDebts { get; set; }
-    private double OverallCleared { get; set; }
-    private double OverallRemaining => OverallDebts - OverallCleared;
+    double OverallDebts = 0.00;
+    double OverallCleared = 0.00;
+    double OverallRemaining => OverallDebts - OverallCleared;
 
-    private int DebtsNumb = 0;
-    private int ClearedDebtsNumb = 0;
-    private int RemainingDebtsNumb = 0;
+    int DebtsNumb = 0;
+    int ClearedDebtsNumb = 0;
+    int RemainingDebtsNumb = 0;
+
+    double PreviousMonthDebt = 0.00;
+    double PreviousMonthCleared = 0.00;
+    double PreviousMonthRemaining = 0.00;
+
+    String DebtPercentageChange = "0";
+    String ClearedPercentageChange = "0";
+    String RemainingPercentageChange = "0";
+
 
     private string LoggedInUserName { get; set; }
 
     private List<Debts> AllDebts { get; set; } = new List<Debts>();
     private List<Debts> FilteredDebts { get; set; } = new List<Debts>();
     private Debts newDebt = new Debts();
+    private List<Transactions> AllTransactions { get; set; } = new List<Transactions>();
+
 
     private bool isClearConfirmationVisible = false;
     private Debts debtToClear = null;
@@ -347,8 +371,74 @@ else
 
         FilteredDebts = filteredDebts
             .OrderBy(d => d.Is_Cleared)
+            .ThenBy(d => d.Due_Date)
             .ToList();
         UpdateTotals();
+
+        // Calculate totals for the previous month
+        if (startDateFilter.HasValue)
+        {
+            var previousMonthStart = startDateFilter.Value.AddMonths(-1);
+            var previousMonthEnd = previousMonthStart.AddMonths(1).AddDays(-1);
+
+            var previousMonthTransactions = AllDebts
+                .Where(d => d.UserName == userName && d.Taken_Date >= previousMonthStart && d.Taken_Date <= previousMonthEnd)
+                .ToList();
+
+            if (previousMonthTransactions != null && previousMonthTransactions.Any())
+            {
+                PreviousMonthDebt = previousMonthTransactions
+                    .Where(d => d.Is_Cleared == false)
+                    .Sum(d => d.Amount);
+
+                PreviousMonthCleared = previousMonthTransactions
+                    .Where(d => d.Is_Cleared == true)
+                    .Sum(d => d.Amount);
+
+                PreviousMonthRemaining = PreviousMonthDebt + PreviousMonthCleared;
+
+                CalculatePercentageChanges();
+            }
+        }
+        else
+        {
+            PreviousMonthDebt = 0;
+            PreviousMonthCleared = 0;
+            PreviousMonthRemaining = 0;
+            DebtPercentageChange = "0";
+            ClearedPercentageChange = "0";
+            RemainingPercentageChange = "0";
+        }
+    }
+
+    private void CalculatePercentageChanges()
+    {
+        if (PreviousMonthDebt == 0.00)
+        {
+            DebtPercentageChange = "0";
+        }
+        else
+        {
+            DebtPercentageChange = Math.Round((((OverallDebts - PreviousMonthDebt) / PreviousMonthDebt) * 100), 2).ToString();
+        }
+
+        if (PreviousMonthCleared == 0.00)
+        {
+            ClearedPercentageChange = "0";
+        }
+        else
+        {
+            ClearedPercentageChange = Math.Round((((OverallCleared - PreviousMonthCleared) / PreviousMonthCleared) * 100), 2).ToString();
+        }
+
+        if (PreviousMonthRemaining == 0.00)
+        {
+            RemainingPercentageChange = "0";
+        }
+        else
+        {
+            RemainingPercentageChange = Math.Round((((OverallRemaining - PreviousMonthRemaining) / PreviousMonthRemaining) * 100), 2).ToString();
+        }
     }
 
     private void UpdateTotals()
@@ -370,23 +460,6 @@ else
         FilterDebts();
     }
 
-    // private async Task ExportToExcel()
-    // {
-    //     Define the file path to save the Excel file
-    //     var outputFilePath = Path.Combine(Directory.GetCurrentDirectory(), "DebtsExport.xlsx");
-
-    //     try
-    //     {
-    //         Call the service to export debts
-    //         await DebtService.ExportDebtsToExcelAsync(outputFilePaths);
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         Handle error (e.g., show an error message)
-    //         Console.WriteLine($"Error: {ex.Message}");
-    //     }
-    // }
-
     private void OpenModal(Debts? debt = null)
     {
         if (debt != null)
@@ -400,8 +473,10 @@ else
                     Amount = debt.Amount,
                     Taken_Date = debt.Taken_Date,
                     Interest_Rate = debt.Interest_Rate,
+                    Interest_Amount = debt.Interest_Amount,
                     Due_Date = debt.Due_Date,
                     Is_Cleared = debt.Is_Cleared,
+                    Date_Cleared = debt.Date_Cleared,
                     Notes = debt.Notes
                 };
             isEditing = true;
@@ -486,78 +561,6 @@ else
         }
     }
 
-    private double CalculateInterest(Debts debt, DateTime currentDate)
-    {
-        // If the debt is not overdue or is already cleared, no interest
-        if (debt.Due_Date >= currentDate || debt.Is_Cleared)
-        {
-            return 0;
-        }
-
-        int overdueMonths = ((currentDate.Year - debt.Due_Date.Year) * 12) + currentDate.Month - debt.Due_Date.Month;
-        if (overdueMonths <= 0) 
-        {
-            return 0; // No interest if not overdue
-        }
-        decimal interestRate = debt.Interest_Rate / 100;
-        double principal = debt.Amount;
-
-        // compound interest: A = P * (1 + r)^n
-        // A = total amount
-        // P = principal amount
-        // r = interest rate 
-        // n = no of periods
-        double totalAmount = principal * Math.Pow((1 + (double)interestRate), overdueMonths);
-        double interest = totalAmount - principal;
-
-        return Math.Round(interest, 2); // Return the interest only
-    }
-
-    // for changing Is_Cleared status of existing debts
-    private async Task ConfirmClear()
-    {
-        if (debtToClear != null)
-        {
-            try
-            {
-                var loggedInUser = await MapUser.GetUserByUsernameAsync(Storage);
-
-                if (debtToClear.Is_Cleared)
-                {
-                    debtToClear.Is_Cleared = false;  // Mark as pending
-                    await DebtService.UpdateUserBalanceDebt(loggedInUser, debtToClear);
-                    await DebtService.UpdateDebtAsync(debtToClear);
-                    await UserService.UpdateUserAsync(loggedInUser);
-                    isClearConfirmationVisible = false;
-                    ToastService.ShowSuccess($"Debt status reverted to Pending.");
-                }
-                else
-                {
-                    // Proceed to clear the debt
-                    if (clearingAmount > loggedInUser.Balance)
-                    {
-                        ToastService.ShowError($"Insufficient balance. Clearing amount: {userCurrency}{clearingAmount}");
-                        return;
-                    }
-
-                    debtToClear.Is_Cleared = true;  // Mark as cleared
-                    await DebtService.UpdateUserBalanceDebt(loggedInUser, debtToClear);
-                    await DebtService.UpdateDebtAsync(debtToClear);
-                    await UserService.UpdateUserAsync(loggedInUser);
-                    isClearConfirmationVisible = false;
-                    ToastService.ShowSuccess($"Debt marked as Cleared.");
-                }
-
-                UpdateTotals();
-                await OnInitializedAsync();
-            }
-            catch (Exception ex)
-            {
-                ToastService.ShowError($"Error updating debt status: {ex.Message}");
-            }
-        }
-    }
-
     private async Task SaveToExcel()
     {
         try
@@ -609,16 +612,99 @@ else
         if (debt.Is_Cleared)
         {
             // restore balance and mark as pending
-            interest = -CalculateInterest(debt, DateTime.Now);
-            clearingAmount = debt.Amount + interest;
+            clearingAmount = debt.Amount - debt.Interest_Amount;
             isClearConfirmationVisible = true;
         }
         else
         {
             // clear the debt
             interest = CalculateInterest(debt, DateTime.Now);
-            clearingAmount = debt.Amount + interest;
+            debt.Interest_Amount = interest;
+            clearingAmount = debt.Amount + debt.Interest_Amount;
             isClearConfirmationVisible = true;
+        }
+    }
+
+    private double CalculateInterest(Debts debt, DateTime currentDate)
+    {
+        // If the debt is not overdue or is already cleared, no interest
+        if (debt.Due_Date >= currentDate || debt.Is_Cleared)
+        {
+            return 0;
+        }
+
+        int overdueMonths = ((currentDate.Year - debt.Due_Date.Year) * 12) + currentDate.Month - debt.Due_Date.Month;
+        if (overdueMonths <= 0)
+        {
+            return 0; // No interest if not overdue
+        }
+        decimal interestRate = debt.Interest_Rate / 100;
+        double principal = debt.Amount;
+
+        // compound interest: A = P * (1 + r)^n
+        // A = total amount
+        // P = principal amount
+        // r = interest rate
+        // n = no of periods
+        double totalAmount = principal * Math.Pow((1 + (double)interestRate), overdueMonths);
+        double interest = totalAmount - principal;
+
+        return Math.Round(interest, 2); // Return the interest only
+    }
+
+    // for changing Is_Cleared status of existing debts
+    private async Task ConfirmClear()
+    {
+        if (debtToClear != null)
+        {
+            try
+            {
+                var loggedInUser = await MapUser.GetUserByUsernameAsync(Storage);
+                AllTransactions = await TransactionService.LoadAllTransactionsAsync();
+                var filteredTransactions = AllTransactions.Where(t => t.UserName == userName);
+                var TotalInflow = filteredTransactions
+                                .Where(t => t.TransactionType == "Credit")
+                                .Sum(t => t.Amount);
+
+                if (debtToClear.Is_Cleared)
+                {
+                    //to pending
+                    await DebtService.RevertUserBalanceDebt(loggedInUser, debtToClear); // Revert user balance
+                    debtToClear.Interest_Amount = 0.00;
+                    debtToClear.Date_Cleared = null;
+                    debtToClear.Is_Cleared = false;
+
+                    await DebtService.UpdateDebtAsync(debtToClear);
+                    await UserService.UpdateUserAsync(loggedInUser);
+                    isClearConfirmationVisible = false;
+                    ToastService.ShowSuccess($"Debt status reverted to Pending.");
+                }
+                else
+                {
+                    // Proceed to clear the debt
+                    if (clearingAmount > TotalInflow)
+                    {
+                        ToastService.ShowError($"Insufficient balance. Clearing amount is {userCurrency}{clearingAmount}, but inflow amount is only  {userCurrency} {TotalInflow} ");
+                        return;
+                    }
+
+                    debtToClear.Is_Cleared = true;  // Mark as cleared
+                    debtToClear.Date_Cleared = DateTime.Now;
+
+                    await DebtService.UpdateUserBalanceDebt(loggedInUser, debtToClear);
+                    await DebtService.UpdateDebtAsync(debtToClear);
+                    await UserService.UpdateUserAsync(loggedInUser);
+                    isClearConfirmationVisible = false;
+                    ToastService.ShowSuccess($"Debt marked as Cleared.");
+                }
+
+                UpdateTotals();
+                await OnInitializedAsync();
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError($"Error updating debt status: {ex.Message}");
+            }
         }
     }
 

@@ -76,34 +76,36 @@ namespace PET.Services
         }
 
         // Method to update user balance
+        // Updating user balance when debt is cleared
         public async Task UpdateUserBalanceDebt(Users user, Debts debt)
         {
             if (debt.Is_Cleared)
             {
-                if (debt.Amount > user.Balance)
+                if (debt.Amount + debt.Interest_Amount > user.Balance)
                 {
                     throw new Exception("Insufficient balance for clearing debt.");
                 }
-                user.Balance -= debt.Amount;
+                user.Balance -= (debt.Amount + debt.Interest_Amount);
             }
             else
             {
-                user.Balance += debt.Amount;
+                user.Balance += (debt.Amount + debt.Interest_Amount);
             }
         }
 
         // Method to revert user balance
         public async Task RevertUserBalanceDebt(Users user, Debts debt)
         {
-            if (!debt.Is_Cleared)
+            if (debt.Is_Cleared)
             {
-                user.Balance -= debt.Amount;
+                user.Balance += (debt.Amount + debt.Interest_Amount);
             }
             else
             {
-                user.Balance += debt.Amount;
+                user.Balance -= (debt.Amount + debt.Interest_Amount);
             }
         }
+
 
 
         // Method to update an existing debt

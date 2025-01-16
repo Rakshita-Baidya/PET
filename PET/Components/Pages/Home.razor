@@ -1,24 +1,173 @@
 ﻿@page "/"
+@using PET.Models
+@inject PreferencesStoreClone Storage
 
-<div class="text-black min-h-screen bg-gradient-to-b from-[#e9efef] to-[#006B6B]" >
+<div class="bg-gradient-to-b from-[#006B6B] to-[#e9efef]">
+    @* Header *@
+    <div class="px-6 py-3 text-white flex items-center justify-between bg-[#006B6B]">
 
-<div class="px-6 py-3 flex items-center justify-between border-2 border-b-[#006B6B] bg-[#ffffff]">
-        @* App Name *@
-    <h1 class="text-2xl font-bold">P.E.T.</h1>
-
-        @* Username *@
-    <div class="text-bold text-md space-x-2">
-
+        <img src="Images/logo.png" alt="logo" class="h-12" />
+        <div class="text-bold text-md space-x-2">
             <a href="/">Home</a>
-            @* <li><a href="/features">Features</a></li> *@
-            @* <li><a href="/contact">Contact Us</a></li> *@
             <a href="/register">Register</a>
             <a href="/login">Login</a>
-
+        </div>
     </div>
-</div>
+
+    @* Hero Section *@
+    <div class="px-4 py-20 my-24 mx-auto sm:px-6 lg:px-8">
+        <div class="text-center">
+            <h1 class="text-white text-4xl font-extrabold sm:text-5xl md:text-6xl">
+                <span class="block">Purrfect Expense Tracker</span>
+                <span class="mt-3 block text-3xl text-[#e9efef]">Track Your Spending with Feline Precision</span>
+            </h1>
+            <p class="mt-3 mx-auto max-w-md text-base text-[#e9efef] sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+                Take control of your finances with our intuitive expense tracking tool. Monitor your spending, set debts, and achieve your financial goals with ease.
+            </p>
+            <div class="mt-5 mx-auto max-w-md sm:flex sm:justify-center md:mt-8">
+                <div class="rounded-md shadow">
+                    <a href="/register" class="px-8 py-3 border-transparent text-white flex w-full items-center justify-center rounded-md border bg-[#006B6B] text-base font-medium hover:bg-[#005555] md:py-4 md:text-lg md:px-10">
+                        Get Started
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Features Section *@
+    <div class="bg-white py-16">
+        <div class="px-4 my-20 mx-auto sm:px-6 lg:px-8">
+            <div class="text-center">
+                <h2 class="text-gray-900 text-3xl font-extrabold sm:text-4xl">
+                    Features that Make Tracking a Breeze
+                </h2>
+            </div>
+            <div class="m-20">
+                <div class="gap-16 space-y-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                    <div class="flex flex-col items-center">
+                        <div class="h-12 w-12 text-white flex items-center justify-center rounded-md bg-[#006B6B]">
+                            
+                        </div>
+                        <h3 class="mt-4 text-gray-900 text-lg font-medium">Easy Expense Entry</h3>
+                        <p class="mt-2 text-gray-500 text-center text-base">
+                            Quick and simple expense logging with smart categorization.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div class="h-12 w-12 text-white flex items-center justify-center rounded-md bg-[#006B6B]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <h3 class="mt-4 text-gray-900 text-lg font-medium">Easy Income Entry</h3>
+                        <p class="mt-2 text-gray-500 text-center text-base">
+                            Quick and simple income logging with smart categorization.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div class="h-12 w-12 text-white flex items-center justify-center rounded-md bg-[#006B6B]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <h3 class="mt-4 text-gray-900 text-lg font-medium">Easy Debt Entry</h3>
+                        <p class="mt-2 text-gray-500 text-center text-base">
+                            Quick and simple debt logging with smart categorization.
+                        </p>
+                    </div>
+
+
+                    <div class="flex flex-col items-center">
+                        <div class="h-12 w-12 text-white flex items-center justify-center rounded-md bg-[#006B6B]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                        </div>
+                        <h3 class="mt-4 text-gray-900 text-lg font-medium">Visual Reports</h3>
+                        <p class="mt-2 text-gray-500 text-center text-base">
+                            Beautiful charts and graphs to visualize your spending patterns.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col items-center">
+                        <div class="h-12 w-12 text-white flex items-center justify-center rounded-md bg-[#006B6B]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                        </div>
+                        <h3 class="mt-4 text-gray-900 text-lg font-medium">Smart Alerts</h3>
+                        <p class="mt-2 text-gray-500 text-center text-base">
+                            Get notified when an action either succeeds faces an error.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div class="h-12 w-12 text-white flex items-center justify-center rounded-md bg-[#006B6B]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                        </div>
+                        <h3 class="mt-4 text-gray-900 text-lg font-medium">Customization</h3>
+                        <p class="mt-2 text-gray-500 text-center text-base">
+                            Choose currency and add your own custom tags.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Footer *@
+    <footer class="text-white bg-[#006B6B]">
+        <div class="py-12 px-4 mx-auto sm:px-6 lg:px-8">
+            <div class="gap-8 grid grid-cols-1 md:grid-cols-4">
+                <div class="space-y-2 col-span-1">
+
+                    <img src="Images/logo.png" alt="logo" class="h-16" />
+                    <h3 class="mb-2 text-xl font-bold">P.E.T.</h3>
+                    <p class="text-gray-300 text-sm">
+                        Your trusted companion for expense tracking and financial management.
+                    </p>
+                    <p class="text-gray-300 text-sm">&copy; 2025 P.E.T. All rights reserved.</p>
+                </div>
+                <div>
+                    <h3 class="mb-4 text-lg font-semibold">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-300 hover:text-white">Home</a></li>
+                        <li><a href="/features" class="text-gray-300 hover:text-white">Features</a></li>
+                        <li><a href="/contact" class="text-gray-300 hover:text-white">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="mb-4 text-lg font-semibold">Legal</h3>
+                    <ul class="space-y-2">
+                        <li><a href="/privacy" class="text-gray-300 hover:text-white">Privacy Policy</a></li>
+                        <li><a href="/terms" class="text-gray-300 hover:text-white">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="mb-4 text-lg font-semibold">Connect</h3>
+                    <div class="space-x-4 flex">
+                        <a href="#">
+                            <img src="Images/FB.png" alt="link" class="h-6 w-6"/>
+                        </a>
+                        <a href="#">
+                            <img src="Images/X.png" alt="link" class="h-6 w-6" />
+                        </a>
+                        <a href="#">
+                            <img src="Images/instagram.png" alt="link" class="h-6 w-6"/>
+                        </a>
+                        <a href="#">
+                            <img src="Images/uiw_linkedin.png" alt="link" class="h-6 w-6" />
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
 </div>
 
 @code {
-
+    protected override async Task OnInitializedAsync() {
+        Storage.ClearAll();
+    }
 }

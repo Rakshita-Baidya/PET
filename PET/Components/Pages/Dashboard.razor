@@ -16,151 +16,177 @@
 @inject IDebt DebtService
 @inject IJSRuntime JSRuntime
 
-<body>
-    <h2 class="mb-6 text-2xl font-bold">
-        Available Balance: @userCurrency @userBalance
-    </h2>
+<body class="space-y-6">
 
-   
+    @* Filter Controls *@
+    <div class="justify-content-between flex items-center">
 
-    <div class="mb-6 justify-content-between flex items-center">
-        @* Date Range Filter *@
-        <div class="flex items-center">
-            <label for="dateRangeFilter" class="form-label">Date Range:</label>
-            <div class="d-flex">
-                <input id="startDateFilter" type="date" @bind="startDateFilter" class="form-control" />
+        <h2 class="text-2xl font-bold">
+            Available Balance: @userCurrency @userBalance
+        </h2>
+        <div class="space-x-3 flex items-center">
+            @* Date Range Filter *@
+            <div class="flex items-center">
+                <span class="mx-1">From</span>
+                <input id="startDateFilter" type="date" @bind="startDateFilter" class="py-1 px-2 border-1 border-gray-300 rounded-2 focus:outline-[#006B6B]" />
                 <span class="mx-2">to</span>
-                <input id="endDateFilter" type="date" @bind="endDateFilter" class="form-control" />
+                <input id="endDateFilter" type="date" @bind="endDateFilter" class="py-1 px-2 border-1 border-gray-300 rounded-2 focus:outline-[#006B6B]" />
             </div>
-        </div>
-        <div>
-            <button class="p-2 rounded-md bg-[#00B2B2]" @onclick="FilterData">Filter</button>
-            <button class="p-2 rounded-md bg-[#00B2B2]" @onclick="ClearFilters">Clear Filters</button>
+            <div class="space-x-2">
+                <button class="p-1.5 text-white w-28 rounded-md bg-[#006B6B] shadow-md" @onclick="FilterData">Set Filter</button>
+                <button class="p-1.5 text-white w-28 bg-red-500 rounded-md shadow-md" @onclick="ClearFilters">Clear Filters</button>
+            </div>
         </div>
     </div>
 
-    <div class="gap-6 grid grid-cols-1 md:grid-cols-3">
+    <div class="gap-4 grid grid-cols-1 md:grid-cols-3">
         @* Total Inflow *@
-        <div class="bg-green-100 p-4 rounded shadow">
+        <div class="bg-green-200 p-4 space-y-1 rounded shadow">
             <div class="align-center flex w-full justify-between">
-                <p class="text-sm">Total Inflow</p>
+                <p class="text-md">Total Inflow</p>
                 <img src="Images/stat-up.svg" alt="inflow" />
             </div>
-            <p class="text-lg font-semibold">
+            <p class="text-xl font-semibold">
                 @if (!FilteredTransactions.Any())
                 {
                     <span>@userCurrency 0.00</span>
                 }
                 else
                 {
-                    <span>@userCurrency @TotalInflow</span>
+                <p>@userCurrency @TotalInflow</p>
+                <p class="text-gray-600 text-sm font-medium">@(InflowPercentageChange.StartsWith("-") ? InflowPercentageChange : "+" + InflowPercentageChange)% from last month</p>
                 }
             </p>
         </div>
 
         @* Total Outflow *@
-        <div class="bg-red-100 p-4 rounded shadow">
+        <div class="bg-red-200 p-4 space-y-1 rounded shadow">
             <div class="align-center flex w-full justify-between">
-                <p class="text-sm">Total Outflow</p>
+                <p class="text-md">Total Outflow</p>
                 <img src="Images/stat-down.svg" alt="outflow" />
             </div>
-            <p class="text-lg font-semibold">
+            <p class="text-xl font-semibold">
                 @if (!FilteredTransactions.Any())
                 {
                     <span>@userCurrency 0.00</span>
                 }
                 else
                 {
-                    <span>@userCurrency @TotalOutflow</span>
+                <p>@userCurrency @TotalOutflow</p>
+                <p class="text-gray-600 text-sm font-medium">@(OutflowPercentageChange.StartsWith("-") ? OutflowPercentageChange : "+" + OutflowPercentageChange)% from last month</p>
                 }
             </p>
         </div>
 
         @* Total transactions *@
-        <div class="bg-blue-100 p-4 rounded shadow">
+        <div class="bg-blue-200 p-4 space-y-1 rounded shadow">
             <div class="align-center flex w-full justify-between">
-                <p class="text-sm">Total Transaction</p>
+                <p class="text-md">Total Transaction</p>
                 <img src="Images/net.svg" alt="net balance" />
             </div>
-            <p class="text-lg font-semibold">
+            <p class="text-xl font-semibold">
                 @if (!FilteredTransactions.Any())
                 {
                     <span>@userCurrency 0.00</span>
                 }
                 else
                 {
-                    <span>@userCurrency @TotalTransaction</span>
+                <p>@userCurrency @TotalTransaction</p>
+                <p class="text-gray-600 text-sm font-medium">@(TransactionPercentageChange.StartsWith("-") ? TransactionPercentageChange : "+" + TransactionPercentageChange)% from last month</p>
                 }
             </p>
         </div>
     </div>
 
-    <div class="my-6 gap-6 grid grid-cols-1 md:grid-cols-3">
+    <div class="gap-4 grid grid-cols-1 md:grid-cols-3">
         @* Top 5 Highest Transactions *@
         <div class="bg-pink-100 p-4 col-span-1 rounded shadow">
-            <div class="align-center flex w-full justify-between">
-                <p class="fw-bold text-md">Top 5 Highest Transactions</p>
-            </div>
-            <ul class="mt-2 text-sm">
-                <p class="text-md font-medium">
-                    @if (!FilteredTransactions.Any())
+            <p class="text-gray-700 mb-2 text-lg font-semibold">Top 5 Highest Transactions</p>
+            <ul class="px-2">
+                @if (!FilteredTransactions.Any())
+                {
+                    <li>No Transactions recorded</li>
+                }
+                else
+                {
+                    @foreach (var transaction in TopHighestTransactions)
                     {
-                        <span>No Transactions recorded</span>
+                        <li class="space-y-1 flex justify-between">
+                            <div class="space-x-2 flex items-center">
+                                <img src="Images/dot.png" alt="*" class="w-4 h-4" />
+                                <p class="text-lg font-medium">@transaction.Title</p>
+                            </div>
+                            <p class="text-lg font-bold">
+                                @if (transaction.TransactionType == "Debit")
+                                {
+                                    <span>-@userCurrency @transaction.Amount</span>
+                                }
+                                else if (transaction.TransactionType == "Credit")
+                                {
+                                    <span>+@userCurrency @transaction.Amount</span>
+                                }
+                            </p>
+                        </li>
                     }
-                    else
-                    {
-                        @foreach (var transaction in TopHighestTransactions)
-                        {
-                            <li>@transaction.Title: @userCurrency @transaction.Amount</li>
-                        }
-                    }
-                </p>
+                }
             </ul>
         </div>
 
+
         @* Top 5 Lowest Transactions *@
         <div class="bg-pink-100 p-4 col-span-1 rounded shadow">
-            <div class="align-center flex w-full justify-between">
-                <p class="fw-bold text-md">Top 5 Lowest Transactions</p>
-            </div>
-            <ul class="mt-2 text-sm">
-                <p class="text-md font-medium">
-                    @if (!FilteredTransactions.Any())
+            <p class="text-gray-700 mb-2 text-lg font-semibold">Top 5 Lowest Transactions</p>
+            <ul class="px-2">
+                @if (!FilteredTransactions.Any())
+                {
+                    <li>No Transactions recorded</li>
+                }
+                else
+                {
+                    @foreach (var transaction in TopLowestTransactions)
                     {
-                        <span>No Transactions recorded</span>
+                        <li class="space-y-1 flex justify-between">
+                            <div class="space-x-2 flex items-center">
+                                <img src="Images/dot.png" alt="*" class="w-4 h-4" />
+                                <p class="text-lg font-medium">@transaction.Title</p>
+                            </div>
+                            <p class="text-lg font-bold">
+                                @if (transaction.TransactionType == "Debit")
+                                {
+                                    <span>-@userCurrency @transaction.Amount</span>
+                                }
+                                else if (transaction.TransactionType == "Credit")
+                                {
+                                    <span>+@userCurrency @transaction.Amount</span>
+                                }
+                            </p>
+                        </li>
                     }
-                    else
-                    {
-                        @foreach (var transaction in TopLowestTransactions)
-                        {
-                            <li>@transaction.Title: @userCurrency @transaction.Amount</li>
-                        }
-                    }
-                </p>
+                }
             </ul>
         </div>
 
         @* Summary *@
         <div class="bg-pink-100 p-4 col-span-1 rounded shadow">
-            <div class="h-52 w-full">
-                <p class="fw-bold text-md">Summary</p>
-                    <canvas id="transactionChart" class="h-full w-full"></canvas>
+            <div class="h-48 w-full">
+                <p class="text-gray-700 mb-2 text-lg font-semibold">Summary</p>
+                <canvas id="transactionChart" class="pb-4 w-full object-contain"></canvas>
             </div>
         </div>
     </div>
 
-    <div class="my-6 gap-6 grid grid-cols-1 md:grid-cols-3">
+    <div class="gap-4 grid grid-cols-1 md:grid-cols-5">
         @* Debt Summary *@
         <div class="bg-yellow-100 p-4 col-span-1 rounded shadow">
             <div class="align-center flex w-full justify-between">
-                <p class="fw-bold text-md">Debt Summary</p>
+                <p class="text-gray-700 mb-2 text-lg font-semibold">Debt Summary</p>
 
             </div>
-            <ul class="mt-2 text-sm">
+            <ul class="px-2 space-y-2">
 
-                <div class="justify-content-between flex">
-                    <p class="text-sm">Total Debts Taken</p>
-                    <p class="text-md font-medium">
+                <div>
+                    <p class="text-sm font-medium">Total Debts Taken</p>
+                    <p class="text-md font-bold">
                         @if (!FilteredDebts.Any())
                         {
                             <span>@userCurrency 0.00</span>
@@ -171,9 +197,9 @@
                         }
                     </p>
                 </div>
-                <div class="justify-content-between flex">
-                    <p class="text-sm">Total Debt Cleared</p>
-                    <p class="text-md font-medium">
+                <div>
+                    <p class="text-sm font-medium">Total Debt Cleared</p>
+                    <p class="text-md font-bold">
                         @if (!FilteredDebts.Any())
                         {
                             <span>@userCurrency 0.00</span>
@@ -184,9 +210,9 @@
                         }
                     </p>
                 </div>
-                <div class="justify-content-between flex">
-                    <p class="text-sm">Total Debt Remaining</p>
-                    <p class="text-md font-medium">
+                <div>
+                    <p class="text-sm font-medium">Total Debt Remaining</p>
+                    <p class="text-md font-bold">
                         @if (!FilteredDebts.Any())
                         {
                             <span>@userCurrency 0.00</span>
@@ -201,20 +227,18 @@
         </div>
 
         @* List debts *@
-        <div class="bg-red-100 p-4 col-span-2 rounded shadow">
-            <div class="align-center flex w-full justify-between">
-                <p class="fw-bold text-md">Pending debts</p>
-            </div>
-            <ul class="mt-2 text-sm">
-                @if (!FilteredTransactions.Any())
-                {
-                    <span>No Debts recorded</span>
-                }
-                else
-                {
-                    <table class="min-w-full table-auto">
+        <div class="bg-red-100 p-4 col-span-4 rounded shadow">
+            <p class="text-gray-700 mb-2 text-lg font-semibold">Pending debts</p>
+            @if (!FilteredTransactions.Any())
+            {
+                <span>No Debts recorded</span>
+            }
+            else
+            {
+                <div class="pr-4 scrollbar-hide max-h-[8rem] overflow-y-scroll">
+                    <table class="table min-w-full">
                         <thead>
-                            <tr class="border-black px-4 py-2 border-b-2 text-center">
+                            <tr class="border-black px-4 pb-2 border-b-[3px] text-center">
                                 <th>Source</th>
                                 <th>Amount</th>
                                 <th>Taken Date</th>
@@ -227,7 +251,7 @@
                         <tbody>
                             @foreach (var debt in PendingDebts)
                             {
-                                <tr class="px-4 py-2 border-b text-center">
+                                <tr class="px-4 py-2 border-black border-b text-center">
                                     <td class="px-4 py-2">@debt.Source</td>
                                     <td class="px-4 py-2">@debt.User.CurrencyCode @debt.Amount</td>
                                     <td class="px-4 py-2">@debt.Taken_Date.ToShortDateString()</td>
@@ -240,8 +264,8 @@
                             }
                         </tbody>
                     </table>
-                }
-            </ul>
+                </div>
+            }
         </div>
     </div>
 
@@ -253,13 +277,21 @@
     string userCurrency = string.Empty;
     double userBalance = 0.00;
 
-    private double OverallDebts { get; set; }
-    private double OverallCleared { get; set; }
-    private double OverallRemaining => OverallDebts - OverallCleared;
+    double OverallDebts = 0.00;
+    double OverallCleared = 0.00;
+    double OverallRemaining => OverallDebts - OverallCleared;
 
-    private double TotalInflow { get; set; }
-    private double TotalOutflow { get; set; }
-    private double TotalTransaction => TotalInflow + TotalOutflow;
+    double TotalInflow = 0.00;
+    double TotalOutflow = 0.00;
+    double TotalTransaction => TotalInflow + TotalOutflow;
+
+    double PreviousMonthInflow = 0.00;
+    double PreviousMonthOutflow = 0.00;
+    double PreviousMonthTransaction = 0.00;
+
+    String InflowPercentageChange = "0";
+    String OutflowPercentageChange = "0";
+    String TransactionPercentageChange = "0";
 
     public DateTime? startDateFilter { get; set; }
     public DateTime? endDateFilter { get; set; }
@@ -288,7 +320,7 @@
                 userBalance = loggedInUser.Balance;
 
                 var currentDate = DateTime.Now;
-                startDateFilter = new DateTime(currentDate.Year, currentDate.Month, 1); 
+                startDateFilter = new DateTime(currentDate.Year, currentDate.Month, 1);
                 endDateFilter = startDateFilter.Value.AddMonths(1).AddDays(-1);
 
                 AllTransactions = await TransactionService.LoadAllTransactionsAsync();
@@ -343,7 +375,7 @@
             .ToList();
 
         UpdateTransactionTotals();
-        
+
         var dailyTotals = FilteredTransactions
         .GroupBy(t => t.Date.Date)
         .Select(g => new
@@ -362,7 +394,52 @@
         JSRuntime.InvokeVoidAsync("clearChart", "transactionChart");
         // Update the chart with the daily data
         JSRuntime.InvokeVoidAsync("updateChart", "transactionChart", dates, inflowData, outflowData);
+
+        // Calculate totals for the previous month
+        if (startDateFilter.HasValue)
+        {
+            var previousMonthStart = startDateFilter.Value.AddMonths(-1);
+            var previousMonthEnd = previousMonthStart.AddMonths(1).AddDays(-1);
+
+            var previousMonthTransactions = AllTransactions
+                .Where(t => t.UserName == userName && t.Date >= previousMonthStart && t.Date <= previousMonthEnd)
+                .ToList();
+
+            if (previousMonthTransactions != null && previousMonthTransactions.Any())
+            {
+                PreviousMonthInflow = previousMonthTransactions
+                    .Where(t => t.TransactionType == "Credit")
+                    .Sum(t => t.Amount);
+
+                PreviousMonthOutflow = previousMonthTransactions
+                    .Where(t => t.TransactionType == "Debit")
+                    .Sum(t => t.Amount);
+
+                PreviousMonthTransaction = PreviousMonthInflow + PreviousMonthOutflow;
+
+                CalculatePercentageChanges();
+            }
+        }
+        else
+        {
+            PreviousMonthInflow = 0;
+            PreviousMonthOutflow = 0;
+            PreviousMonthTransaction = 0;
+            InflowPercentageChange = "0";
+            OutflowPercentageChange = "0";
+            TransactionPercentageChange = "0";
+        }
+
     }
+
+    private void CalculatePercentageChanges()
+    {
+
+        InflowPercentageChange = Math.Round((((TotalInflow - PreviousMonthInflow) / PreviousMonthInflow) * 100), 2).ToString();
+        OutflowPercentageChange = Math.Round((((TotalOutflow - PreviousMonthOutflow) / PreviousMonthOutflow) * 100), 2).ToString();
+        TransactionPercentageChange = Math.Round((((TotalTransaction - PreviousMonthTransaction) / PreviousMonthTransaction) * 100), 2).ToString();
+    }
+
 
     private void UpdateTransactionTotals()
     {
@@ -400,7 +477,7 @@
             filteredDebts = filteredDebts.Where(d => d.Taken_Date <= endDateFilter.Value);
         }
 
-        FilteredDebts = filteredDebts.ToList();
+        FilteredDebts = filteredDebts.OrderBy(d => d.Amount).ToList();
         UpdateDebtTotals();
     }
 
