@@ -17,39 +17,39 @@
 @inject IUser UserService
 @inject ICurrency CurrencyService
 
-<div class="p-6 bg-white mx-auto max-w-4xl rounded-lg shadow-md">
+<div class="p-6 bg-white mx-auto max-w-4xl rounded-lg border-2 border-[#006B6B] shadow-md">
     <div class="mb-6 text-center">
         <h2 class="text-gray-800 text-3xl font-semibold">User Profile</h2>
     </div>
 
     @if (loggedInUser != null)
     {
-        <div class="gap-6 grid grid-cols-1 md:grid-cols-2">
+        <div class="gap-6 pl-32 mt-12 mx-auto grid grid-cols-1 md:grid-cols-2">
             <!-- User Info -->
             <div class="space-y-4">
                 <div>
                     <label class="text-gray-600 font-medium">User Name</label>
-                    <p class="text-gray-800">@loggedInUser?.UserName</p>
+                    <p class="text-gray-800 font-semibold">@loggedInUser?.UserName</p>
                 </div>
                 <div>
                     <label class="text-gray-600 font-medium">Full Name</label>
-                    <p class="text-gray-800">@loggedInUser?.Name</p>
+                    <p class="text-gray-800 font-semibold">@loggedInUser?.Name</p>
                 </div>
                 <div>
                     <label class="text-gray-600 font-medium">Email</label>
-                    <p class="text-gray-800">@loggedInUser?.Email</p>
+                    <p class="text-gray-800 font-semibold">@loggedInUser?.Email</p>
                 </div>
                 <div>
                     <label class="text-gray-600 font-medium">Phone</label>
-                    <p class="text-gray-800">@loggedInUser?.Phone</p>
+                    <p class="text-gray-800 font-semibold">@loggedInUser?.Phone</p>
                 </div>
                 <div>
                     <label class="text-gray-600 font-medium">Gender</label>
-                    <p class="text-gray-800">@loggedInUser?.Gender</p>
+                    <p class="text-gray-800 font-semibold">@loggedInUser?.Gender</p>
                 </div>
                 <div>
                     <label class="text-gray-600 font-medium">Address</label>
-                    <p class="text-gray-800">@loggedInUser?.Address</p>
+                    <p class="text-gray-800 font-semibold">@loggedInUser?.Address</p>
                 </div>
             </div>
 
@@ -57,22 +57,22 @@
             <div class="space-y-4">
                 <div>
                     <label class="text-gray-600 font-medium">Currency</label>
-                    <p class="text-gray-800">@loggedInUser?.Currency.Name @loggedInUser?.Currency.Code</p>
+                    <p class="text-gray-800 font-semibold">@loggedInUser?.Currency.Name @loggedInUser?.Currency.Code</p>
                 </div>
                 <div>
                     <label class="text-gray-600 font-medium">Balance</label>
-                    <p class="text-gray-800">@loggedInUser?.CurrencyCode @loggedInUser?.Balance.ToString("F2")</p>
+                    <p class="text-gray-800 font-semibold">@loggedInUser?.CurrencyCode @loggedInUser?.Balance.ToString("F2")</p>
                 </div>
                 <div>
                     <label class="text-gray-600 font-medium">Date Joined</label>
-                    <p class="text-gray-800">@loggedInUser?.Date_Created.ToString("MMMM dd, yyyy")</p>
+                    <p class="text-gray-800 font-semibold">@loggedInUser?.Date_Created.ToString("MMMM dd, yyyy")</p>
                 </div>
             </div>
         </div>
     }
 
     <div class="mt-6 text-center">
-        <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" @onclick="ShowEditModal">Edit Profile</button>
+        <button class="px-4 py-2 text-white rounded-md bg-[#006b6b] hover:bg-blue-700" @onclick="ShowEditModal">Edit Profile</button>
     </div>
 </div>
 

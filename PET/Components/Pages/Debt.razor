@@ -513,6 +513,11 @@
             ToastService.ShowError("Source and Amount must be provided, and Amount must be greater than zero.");
             return false;
         }
+        if (newDebt.Due_Date <= newDebt.Taken_Date)
+        {
+            ToastService.ShowError("Due date cannot be before taken date");
+            return false;
+        }
 
         return true;
     }
