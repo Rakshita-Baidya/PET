@@ -263,7 +263,6 @@ else
     double userBalance = 0.00;
     double clearingAmount = 0.00;
     double interest = 0.00;
-    double totalAmount = 0.00;
 
     private double OverallDebts { get; set; }
     private double OverallCleared { get; set; }
@@ -346,7 +345,9 @@ else
             filteredDebts = filteredDebts.Where(t => t.Source.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
         }
 
-        FilteredDebts = filteredDebts.ToList();
+        FilteredDebts = filteredDebts
+            .OrderBy(d => d.Is_Cleared)
+            .ToList();
         UpdateTotals();
     }
 

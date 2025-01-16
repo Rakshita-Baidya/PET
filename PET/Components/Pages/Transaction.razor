@@ -374,7 +374,9 @@ else
             filteredTransactions = filteredTransactions.Where(t => t.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
         }
 
-        FilteredTransactions = filteredTransactions.ToList();
+        FilteredTransactions = filteredTransactions
+            .OrderBy(t => t.Date)
+            .ToList();
         UpdateTotals();
     }
 
