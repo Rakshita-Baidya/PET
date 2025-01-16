@@ -1,3 +1,7 @@
-<svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M24.1112 1.85718H1.82544L10.3969 13.8572V24.1429L15.5397 20.7143V13.8572L24.1112 1.85718Z" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Uploaded to: SVG Find, www.svgrepo.com, Transformed by: SVG Find Mixer Tools -->
+<svg fill="#ffffff" width="800px" height="800px" version="1.1" viewBox="144 144 512 512" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff">
+<g id="SVGRepo_bgCarrier" stroke-width="0"/>
+<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="SVGRepo_iconCarrier"> <path d="m258.68 267.31 94.086 152.89v137.24c0 11.934 6.7383 22.832 17.414 28.168 10.66 5.3359 23.426 4.1875 32.969-2.9766 11.477-8.6133 24.117-18.09 31.488-23.617 7.9336-5.9492 12.594-15.27 12.594-25.188v-113.62l94.086-152.89c8.9609-14.562 9.3516-32.859 1.0078-47.785-8.3438-14.941-24.121-24.199-41.234-24.199h-202.18c-17.113 0-32.891 9.2578-41.234 24.199-8.3438 14.926-7.9492 33.223 1.0078 47.785zm157.06 266.52-31.488 23.613v-141.7c0-2.9141-0.80078-5.7617-2.3281-8.25l-96.434-156.68c-2.9766-4.8516-3.1172-10.957-0.33203-15.934 2.7891-4.9766 8.0469-8.0625 13.746-8.0625h202.18c5.6992 0 10.961 3.0859 13.746 8.0625 2.7852 4.9766 2.6445 11.082-0.33203 15.934l-96.43 156.68c-1.5273 2.4883-2.332 5.3359-2.332 8.25z" fill-rule="evenodd"/> </g>
+</svg>

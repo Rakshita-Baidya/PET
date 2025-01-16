@@ -5,10 +5,11 @@
 <div class="bg-gradient-to-b from-[#006B6B] to-[#e9efef]">
     @* Header *@
     <div class="px-6 py-3 text-white flex items-center justify-between bg-[#006B6B]">
-
         <img src="Images/logo.png" alt="logo" class="h-12" />
-        <div class="text-bold text-md space-x-2">
+        <div class="text-bold text-md space-x-12">
             <a href="/">Home</a>
+            <a href="/features">Features</a>
+            <a href="/contact">Contact Us</a>
             <a href="/register">Register</a>
             <a href="/login">Login</a>
         </div>
@@ -46,29 +47,19 @@
                 <div class="gap-16 space-y-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                     <div class="flex flex-col items-center">
                         <div class="h-12 w-12 text-white flex items-center justify-center rounded-md bg-[#006B6B]">
-                            
+                            <img src="Images/wallet.svg" alt="money" class="h-6 w-6" />
+
                         </div>
                         <h3 class="mt-4 text-gray-900 text-lg font-medium">Easy Expense Entry</h3>
                         <p class="mt-2 text-gray-500 text-center text-base">
                             Quick and simple expense logging with smart categorization.
                         </p>
                     </div>
+ 
                     <div class="flex flex-col items-center">
                         <div class="h-12 w-12 text-white flex items-center justify-center rounded-md bg-[#006B6B]">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <h3 class="mt-4 text-gray-900 text-lg font-medium">Easy Income Entry</h3>
-                        <p class="mt-2 text-gray-500 text-center text-base">
-                            Quick and simple income logging with smart categorization.
-                        </p>
-                    </div>
-                    <div class="flex flex-col items-center">
-                        <div class="h-12 w-12 text-white flex items-center justify-center rounded-md bg-[#006B6B]">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
+                            <img src="Images/debt.svg" alt="money" class="h-6 w-6" />
+
                         </div>
                         <h3 class="mt-4 text-gray-900 text-lg font-medium">Easy Debt Entry</h3>
                         <p class="mt-2 text-gray-500 text-center text-base">
@@ -76,12 +67,23 @@
                         </p>
                     </div>
 
+                    <div class="flex flex-col items-center">
+                        <div class="h-12 w-12 text-white flex items-center justify-center rounded-md bg-[#006B6B]">
+                            <img src="Images/wallet.svg" alt="money" class="h-6 w-6" />
+
+                        </div>
+                        <h3 class="mt-4 text-gray-900 text-lg font-medium">Easy Income Entry</h3>
+                        <p class="mt-2 text-gray-500 text-center text-base">
+                            Quick and simple income logging with smart categorization.
+                        </p>
+                    </div>
+                    
+
 
                     <div class="flex flex-col items-center">
                         <div class="h-12 w-12 text-white flex items-center justify-center rounded-md bg-[#006B6B]">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                            </svg>
+                            <img src="Images/dashboard.svg" alt="money" class="h-6 w-6" />
+
                         </div>
                         <h3 class="mt-4 text-gray-900 text-lg font-medium">Visual Reports</h3>
                         <p class="mt-2 text-gray-500 text-center text-base">
@@ -91,9 +93,8 @@
 
                     <div class="flex flex-col items-center">
                         <div class="h-12 w-12 text-white flex items-center justify-center rounded-md bg-[#006B6B]">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
+                            <img src="Images/notify.svg" alt="money" class="h-6 w-6" />
+
                         </div>
                         <h3 class="mt-4 text-gray-900 text-lg font-medium">Smart Alerts</h3>
                         <p class="mt-2 text-gray-500 text-center text-base">
@@ -102,9 +103,8 @@
                     </div>
                     <div class="flex flex-col items-center">
                         <div class="h-12 w-12 text-white flex items-center justify-center rounded-md bg-[#006B6B]">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
+                            <img src="Images/tag.svg" alt="money" class="h-6 w-6" />
+
                         </div>
                         <h3 class="mt-4 text-gray-900 text-lg font-medium">Customization</h3>
                         <p class="mt-2 text-gray-500 text-center text-base">
@@ -118,7 +118,7 @@
 
     @* Footer *@
     <footer class="text-white bg-[#006B6B]">
-        <div class="py-12 px-4 mx-auto sm:px-6 lg:px-8">
+        <div class="py-12 mx-auto sm:px-6 lg:px-8">
             <div class="gap-8 grid grid-cols-1 md:grid-cols-4">
                 <div class="space-y-2 col-span-1">
 
