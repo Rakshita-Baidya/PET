@@ -501,7 +501,7 @@
             }
 
             // Save transactions to the Excel file
-            await transactionService.ExportTransactionsToExcelAsync(filePath);
+            await transactionService.ExportTransactionsToExcelAsync(FilteredTransactions, filePath);
 
             // Read the file into a MemoryStream
             var fileBytes = File.ReadAllBytes(filePath);

@@ -128,12 +128,11 @@ namespace PET.Services
         }
 
         //export to excel
-        public async Task ExportTransactionsToExcelAsync(string filePath)
+        public async Task ExportTransactionsToExcelAsync(List<Transactions> transactions, string filePath)
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             try
             {
-                var transactions = await LoadAllTransactionsAsync();
                 if (transactions == null || !transactions.Any())
                 {
                     Console.WriteLine("No transactions available to export.");
@@ -144,8 +143,8 @@ namespace PET.Services
                 var worksheet = package.Workbook.Worksheets.Add("Transactions");
 
                 // Add headers
-                worksheet.Cells[1, 1].Value = "Transaction ID";
-                worksheet.Cells[1, 2].Value = "Name";
+                worksheet.Cells[1, 1].Value = "ID";
+                worksheet.Cells[1, 2].Value = "Title";
                 worksheet.Cells[1, 3].Value = "Amount";
                 worksheet.Cells[1, 4].Value = "Type";
                 worksheet.Cells[1, 5].Value = "Date";

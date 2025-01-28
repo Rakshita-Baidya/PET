@@ -1,18 +1,20 @@
 ﻿window.updateChart = function (chartId, dates, inflowData, outflowData) {
     var ctx = document.getElementById(chartId).getContext('2d');
 
-    if (Chart.getChart(ctx)) {
-        chart.destroy(); // Destroy the current chart instance
+    // Destroy the existing chart
+    var existingChart = Chart.getChart(ctx); 
+    if (existingChart) {
+        existingChart.destroy(); 
     }
 
     var chart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: dates,  // Use exact transaction dates as labels
+            labels: dates,
             datasets: [
                 {
                     label: 'Inflow',
-                    data: inflowData,  // Data for inflow over the dates
+                    data: inflowData,
                     borderColor: '#00B2B2',
                     backgroundColor: '#00B2B2',
                     lineTension: 0.3,  
@@ -23,7 +25,7 @@
                 },
                 {
                     label: 'Outflow',
-                    data: outflowData,  // Data for outflow over the dates
+                    data: outflowData,
                     borderColor: '#FF0000',
                     backgroundColor: '#FF0000',
                     fill: false,

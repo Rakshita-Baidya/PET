@@ -161,7 +161,13 @@
     {
         try
         {
+            var selectedCurrency = Currencies.FirstOrDefault(c => c.Code == loggedInUser.CurrencyCode);
+            if (selectedCurrency != null)
+            {
+                loggedInUser.Currency = selectedCurrency; // Set the complete Currency object
+            }
             await UserService.UpdateUserAsync(loggedInUser);
+
             ToastService.ShowSuccess("Profile updated successfully!");
             CloseEditModal(); // Close modal after saving
         }

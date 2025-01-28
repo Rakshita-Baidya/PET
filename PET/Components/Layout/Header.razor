@@ -17,17 +17,15 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Load user on initialization
         await LoadUserAsync();
 
-        // Subscribe to storage changes
+        // Storage changes
         Storage.OnChange += async () =>
         {
             await LoadUserAsync();
             StateHasChanged();
         };
 
-        // Update page title changes
         PageTitleService.OnPageTitleChanged += StateHasChanged;
     }
 
@@ -39,7 +37,6 @@
 
     public void Dispose()
     {
-        // Unsubscribe from events
         Storage.OnChange -= async () => await LoadUserAsync();
         PageTitleService.OnPageTitleChanged -= StateHasChanged;
     }

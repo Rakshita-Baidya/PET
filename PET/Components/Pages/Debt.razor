@@ -27,18 +27,17 @@
             Available Balance: @userCurrency @userBalance
         </h2>
         <div class="space-x-2">
-            <button class="p-1.5 text-white w-36 rounded-md bg-[#006B6B] shadow-md" @onclick="() => OpenModal()">Add Debt</button>
+            <button class="p-1.5 text-white w-36 rounded-md bg-[#006B6B] shadow-md" @onclick="() => OpenModal()">
+                Add Debt
+            </button>
         </div>
-
-
     </div>
 
     @* Filter Controls *@
     <div class="mb-6 justify-content-end space-x-3 flex items-center">
 
         @* Search Input Field *@
-        <input id="searchDebts" type="text" placeholder="Search"
-        class="w-54 border-gray-500 p-1.5 text-gray-800 rounded-2 placeholder-black rounded-md border focus:outline-[#006B6B]" @bind="searchQuery" @oninput="OnSearchInputChanged" />
+        <input id="searchDebts" type="text" placeholder="Search" @bind="searchQuery" @oninput="OnSearchInputChanged" class="w-54 border-gray-500 p-1.5 text-gray-800 rounded-2 placeholder-black rounded-md border focus:outline-[#006B6B]"/>
 
         @* Date Range Filter *@
         <div class="flex items-center">
@@ -48,6 +47,7 @@
             <input id="endDateFilter" type="date" @bind="endDateFilter" class="py-1 px-2 border-1 border-gray-300 rounded-2 focus:outline-[#006B6B]" />
         </div>
 
+        @* filter buttons *@
         <div class="space-x-2">
             <button class="p-1.5 text-white w-28 rounded-md bg-[#006B6B] shadow-md" @onclick="FilterDebts">Set Filter</button>
             <button class="p-1.5 text-white w-28 bg-red-500 rounded-md shadow-md" @onclick="ClearFilters">Clear Filters</button>
@@ -586,7 +586,7 @@
             }
 
             // Save debts to the Excel file
-            await debtService.ExportDebtsToExcelAsync(filePath);
+            await debtService.ExportDebtsToExcelAsync(FilteredDebts, filePath);
 
             // Read the file into a MemoryStream
             var fileBytes = File.ReadAllBytes(filePath);

@@ -16,7 +16,7 @@
                 Timeout="5"
                 ShowProgressBar="@true"
                 ShowCloseButton="@true"
-                MaxToastCount="3"/>
+                MaxToastCount="3" />
 
 @if (IsLoggedIn)
 {
@@ -54,7 +54,6 @@ else
     private async Task UpdateLoginStatusAsync()
     {
         var loggedInUser = await MapUser.GetUserByUsernameAsync(Storage);
-
         IsLoggedIn = loggedInUser != null;
     }
 

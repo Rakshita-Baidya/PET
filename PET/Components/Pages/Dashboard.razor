@@ -226,7 +226,7 @@
             </ul>
         </div>
 
-        @* List debts *@
+        @* List pending debts *@
         <div class="bg-red-100 p-4 col-span-4 rounded shadow">
             <p class="text-gray-700 mb-2 text-lg font-semibold">Pending debts</p>
             @if (!FilteredTransactions.Any())
@@ -391,7 +391,6 @@
         var inflowData = dailyTotals.Select(d => d.Inflow).ToList();
         var outflowData = dailyTotals.Select(d => d.Outflow).ToList();
 
-        JSRuntime.InvokeVoidAsync("clearChart", "transactionChart");
         // Update the chart with the daily data
         JSRuntime.InvokeVoidAsync("updateChart", "transactionChart", dates, inflowData, outflowData);
 

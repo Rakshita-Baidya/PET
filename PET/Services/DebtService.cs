@@ -1,4 +1,5 @@
 ﻿using OfficeOpenXml;
+using OfficeOpenXml.Style;
 using PET.Interfaces;
 using PET.Models;
 using System.Text.Json;
@@ -76,7 +77,6 @@ namespace PET.Services
         }
 
         // Method to update user balance
-        // Updating user balance when debt is cleared
         public async Task UpdateUserBalanceDebt(Users user, Debts debt)
         {
             if (debt.Is_Cleared)
@@ -131,15 +131,14 @@ namespace PET.Services
         }
 
         //export to excel
-        public async Task ExportDebtsToExcelAsync(string filePath)
+        public async Task ExportDebtsToExcelAsync(List<Debts> debts, string filePath)
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             try
             {
-                var debts = await LoadAllDebtsAsync();
                 if (debts == null || !debts.Any())
                 {
-                    Console.WriteLine("No debts available to export.");
+                    Console.WriteLine("No transactions available to export.");
                     return;
                 }
 
@@ -147,25 +146,41 @@ namespace PET.Services
                 var worksheet = package.Workbook.Worksheets.Add("Debts");
 
                 // Add headers
-                worksheet.Cells[1, 1].Value = "Source";
-                worksheet.Cells[1, 2].Value = "Amount";
-                worksheet.Cells[1, 3].Value = "Taken Date";
-                worksheet.Cells[1, 4].Value = "Interest Rate";
-                worksheet.Cells[1, 5].Value = "Due Date";
-                worksheet.Cells[1, 6].Value = "Status";
-                worksheet.Cells[1, 7].Value = "Notes";
+                worksheet.Cells[1, 1].Value = "ID";
+                worksheet.Cells[1, 2].Value = "Source";
+                worksheet.Cells[1, 3].Value = "Amount";
+                worksheet.Cells[1, 4].Value = "Taken Date";
+                worksheet.Cells[1, 5].Value = "Interest Rate";
+                worksheet.Cells[1, 6].Value = "Interest Amount";
+                worksheet.Cells[1, 7].Value = "Due Date";
+                worksheet.Cells[1, 8].Value = "Notes";
+                worksheet.Cells[1, 9].Value = "Is Cleared";
+                worksheet.Cells[1, 10].Value = "Date Cleared";
+
+
+                // Style headers
+                using (var range = worksheet.Cells[1, 1, 1, 10])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
 
                 // Add data rows
                 for (int i = 0; i < debts.Count; i++)
                 {
                     var debt = debts[i];
-                    worksheet.Cells[i + 2, 1].Value = debt.Source;
-                    worksheet.Cells[i + 2, 2].Value = $"{debt.Amount:C}";
-                    worksheet.Cells[i + 2, 3].Value = debt.Taken_Date.ToShortDateString();
-                    worksheet.Cells[i + 2, 4].Value = debt.Interest_Rate;
-                    worksheet.Cells[i + 2, 5].Value = debt.Due_Date.ToShortDateString();
-                    worksheet.Cells[i + 2, 6].Value = debt.Is_Cleared ? "Cleared" : "Pending";
-                    worksheet.Cells[i + 2, 7].Value = debt.Notes;
+                    worksheet.Cells[i + 2, 1].Value = debt.Id;
+                    worksheet.Cells[i + 2, 2].Value = debt.Source;
+                    worksheet.Cells[i + 2, 3].Value = debt.Amount;
+                    worksheet.Cells[i + 2, 4].Value = debt.Taken_Date.ToShortDateString();
+                    worksheet.Cells[i + 2, 5].Value = debt.Interest_Rate;
+                    worksheet.Cells[i + 2, 6].Value = debt.Interest_Amount;
+                    worksheet.Cells[i + 2, 7].Value = debt.Due_Date.ToShortDateString();
+                    worksheet.Cells[i + 2, 8].Value = debt.Notes;
+                    worksheet.Cells[i + 2, 9].Value = debt.Is_Cleared ? "Cleared" : "Pending";
+                    worksheet.Cells[i + 2, 10].Value = debt.Date_Cleared.HasValue
+                                                        ? debt.Date_Cleared.Value.ToShortDateString()
+                                                        : string.Empty;
                 }
 
                 // Auto-fit columns

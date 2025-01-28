@@ -10,7 +10,7 @@ namespace PET.Interfaces
         Task DeleteDebtAsync(Debts debt);
         Task UpdateUserBalanceDebt(Users user, Debts debt);
         Task RevertUserBalanceDebt(Users user, Debts debt);
-        Task ExportDebtsToExcelAsync(string filePath);
+        Task ExportDebtsToExcelAsync(List<Debts> filteredDebts, string filePath);
         Task<Debts> GetDebtByIdAsync(Guid debtId);
     }
 }
